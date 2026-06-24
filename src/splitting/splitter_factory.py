@@ -6,12 +6,12 @@ from langchain_core.documents import Document
 
 from src.config import settings
 from src.config.constants import CODE_EXTENSIONS
-from src.splitting.semantic_splitter import (
-    BaseSplitter,
-    SemanticSplitter,
-    RecursiveSplitter,
-    CodeSplitter,
-)
+from src.splitting.base_splitter import BaseSplitter
+from src.splitting.semantic_splitter import SemanticSplitter
+from src.splitting.recursive_splitter import RecursiveSplitter
+from src.splitting.code_splitter import CodeSplitter
+from src.splitting.heading_splitter import HeadingSplitter
+from src.splitting.paragraph_splitter import ParagraphSplitter
 
 
 class SplitterFactory:
@@ -47,6 +47,7 @@ class SplitterFactory:
         co = chunk_overlap or settings.chunk_overlap
 
         code_docs: list[Document] = []
+        heading_docs: list[Document] = []
         regular_docs: list[Document] = []
 
         for doc in documents:
@@ -54,12 +55,16 @@ class SplitterFactory:
             ext = doc.metadata.get("file_type", "")
             if lang or ext in CODE_EXTENSIONS:
                 code_docs.append(doc)
+            elif ext in {".md", ".markdown", ".rst"}:
+                heading_docs.append(doc)
             else:
                 regular_docs.append(doc)
 
         splitters: list[BaseSplitter] = []
         if code_docs:
             splitters.append(CodeSplitter(chunk_size=max(cs, 1500), chunk_overlap=co))
+        if heading_docs:
+            splitters.append(HeadingSplitter(chunk_size=cs, chunk_overlap=co))
         if regular_docs:
             splitters.append(SplitterFactory.create(
                 chunk_size=cs,
@@ -80,6 +85,7 @@ class SplitterFactory:
         co = chunk_overlap or settings.chunk_overlap
 
         code_docs: list[Document] = []
+        heading_docs: list[Document] = []
         regular_docs: list[Document] = []
 
         for doc in documents:
@@ -87,6 +93,8 @@ class SplitterFactory:
             ext = doc.metadata.get("file_type", "")
             if lang or ext in CODE_EXTENSIONS:
                 code_docs.append(doc)
+            elif ext in {".md", ".markdown", ".rst"}:
+                heading_docs.append(doc)
             else:
                 regular_docs.append(doc)
 
@@ -95,6 +103,10 @@ class SplitterFactory:
         if code_docs:
             code_splitter = CodeSplitter(chunk_size=max(cs, 1500), chunk_overlap=co)
             all_chunks.extend(code_splitter.split(code_docs))
+
+        if heading_docs:
+            heading_splitter = HeadingSplitter(chunk_size=cs, chunk_overlap=co)
+            all_chunks.extend(heading_splitter.split(heading_docs))
 
         if regular_docs:
             se = semantic_enabled if semantic_enabled is not None else settings.semantic_chunking_enabled
