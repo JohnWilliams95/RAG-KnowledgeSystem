@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     semantic_chunking_enabled: bool = Field(default=True, alias="SEMANTIC_CHUNKING_ENABLED")
     max_workers: int = Field(default=4, alias="MAX_WORKERS")
 
+    ocr_enabled: bool = Field(default=True, alias="OCR_ENABLED")
+    ocr_dpi: int = Field(default=300, alias="OCR_DPI")
+    pdf_use_unstructured: bool = Field(default=False, alias="PDF_USE_UNSTRUCTURED")
+    pdf_extract_images: bool = Field(default=True, alias="PDF_EXTRACT_IMAGES")
+
     retrieval_top_k: int = Field(default=20, alias="RETRIEVAL_TOP_K")
     rerank_top_n: int = Field(default=5, alias="RERANK_TOP_N")
     reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="RERANKER_MODEL")

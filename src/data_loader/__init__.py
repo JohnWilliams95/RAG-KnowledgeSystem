@@ -11,6 +11,8 @@ from src.data_loader.html_loader import HTMLLoader
 from src.data_loader.code_loader import CodeLoader
 from src.data_loader.structured_loader import StructuredDataLoader
 from src.data_loader.web_scraper import WebScraper
+from src.data_loader.unstructured_loader import UnstructuredPDFLoader
+from src.data_loader.ocr_utils import ocr_image, ocr_pdf_page, is_scanned_page
 
 __all__ = [
     "BaseDocumentLoader",
@@ -29,4 +31,8 @@ __all__ = [
     "CodeLoader",
     "StructuredDataLoader",
     "WebScraper",
+    "UnstructuredPDFLoader",
+    "ocr_image",
+    "ocr_pdf_page",
+    "is_scanned_page",
 ]

@@ -167,7 +167,7 @@ RAG-Langchain-v2/
 
 | 类型 | 扩展名 | 解析方案 |
 |------|--------|----------|
-| PDF | `.pdf` | PyMuPDF(fitz) + 表格提取 |
+| PDF | `.pdf` | PyMuPDF + RapidOCR(扫描件) + UnstructuredIO(复杂布局) + 图片提取 |
 | Word | `.docx` `.doc` | python-docx |
 | Excel | `.xlsx` `.xls` `.csv` | openpyxl + pandas |
 | PPT | `.pptx` `.ppt` | python-pptx |
