@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from langchain_core.documents import Document
 
@@ -100,6 +101,8 @@ class SemanticSplitter(BaseSplitter):
         split_points: list[int],
         doc: Document,
     ) -> list[Document]:
+        from src.splitting.fixed_splitter import FixedSplitter
+
         boundaries = [0] + split_points + [len(sentences)]
         chunks: list[Document] = []
 
@@ -109,8 +112,6 @@ class SemanticSplitter(BaseSplitter):
             chunk_text = " ".join(sentences[start:end])
 
             if len(chunk_text) > self._chunk_size * 2:
-                from src.splitting.fixed_splitter import FixedSplitter
-
                 fixed_splitter = FixedSplitter(
                     chunk_size=self._chunk_size,
                     chunk_overlap=self._chunk_overlap,
