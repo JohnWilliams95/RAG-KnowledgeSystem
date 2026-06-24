@@ -39,14 +39,10 @@ class EnsembleRetriever:
             embedding_model=embedding_model,
             top_k=top_k,
         )
-        self._sparse_retriever = BM25Retriever(
-            document_store=document_store,
-            embedding_model=embedding_model,
-            top_k=top_k,
-        )
+        self._bm25_retriever = BM25Retriever(top_k=top_k)
         self._hybrid_retriever = HybridRetriever(
             dense_retriever=self._dense_retriever,
-            sparse_retriever=self._sparse_retriever,
+            sparse_retriever=self._bm25_retriever,
             dense_weight=dense_weight,
             sparse_weight=sparse_weight,
             rrf_k=rrf_k,
@@ -122,4 +118,4 @@ class EnsembleRetriever:
         top_k: Optional[int] = None,
     ) -> list[tuple[Document, float]]:
         k = top_k or self._top_k
-        return self._sparse_retriever.retrieve(query, top_k=k)
+        return self._bm25_retriever.retrieve(query, top_k=k)

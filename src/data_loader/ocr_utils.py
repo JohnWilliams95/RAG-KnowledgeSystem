@@ -51,7 +51,7 @@ def ocr_image(
         texts = []
         for line in result:
             if line and len(line) >= 2:
-                text = line[0] if isinstance(line[0], str) else str(line[0])
+                text = line[1] if isinstance(line[1], str) else str(line[1])
                 texts.append(text)
 
         return "\n".join(texts), elapse or 0.0

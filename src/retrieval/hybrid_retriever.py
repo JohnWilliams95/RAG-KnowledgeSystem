@@ -23,9 +23,9 @@ class HybridRetriever:
         rrf_k: int = 60,
     ):
         self._dense_retriever = dense_retriever
-        self._sparse_retriever = sparse_retriever
-        self._dense_weight = dense_weight or settings.dense_weight
-        self._sparse_weight = sparse_weight or settings.bm25_weight
+        self._bm25_retriever = sparse_retriever
+        self._dense_weight = dense_weight if dense_weight is not None else settings.dense_weight
+        self._sparse_weight = sparse_weight if sparse_weight is not None else settings.bm25_weight
         self._rrf_k = rrf_k
 
         total = self._dense_weight + self._sparse_weight
@@ -56,7 +56,7 @@ class HybridRetriever:
         top_k: int,
     ) -> list[tuple[Document, float]]:
         dense_results = self._dense_retriever.dense_search(query, top_k=top_k * 2)
-        sparse_results = self._sparse_retriever.retrieve(query, top_k=top_k * 2)
+        sparse_results = self._bm25_retriever.retrieve(query, top_k=top_k * 2)
 
         doc_scores: dict[str, tuple[Document, float]] = {}
 
@@ -86,7 +86,7 @@ class HybridRetriever:
         top_k: int,
     ) -> list[tuple[Document, float]]:
         dense_results = self._dense_retriever.dense_search(query, top_k=top_k * 2)
-        sparse_results = self._sparse_retriever.retrieve(query, top_k=top_k * 2)
+        sparse_results = self._bm25_retriever.retrieve(query, top_k=top_k * 2)
 
         all_scores: dict[str, tuple[Document, float, float]] = {}
 

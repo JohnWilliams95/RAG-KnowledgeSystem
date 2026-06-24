@@ -50,4 +50,4 @@ def get_ensemble_retriever() -> EnsembleRetriever:
 
 @lru_cache()
 def get_memory() -> ConversationMemory:
-    return ConversationMemory()
+    return ConversationMemory(redis_url=getattr(settings, 'redis_url', None))

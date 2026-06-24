@@ -10,12 +10,10 @@ from qdrant_client import QdrantClient, models
 from qdrant_client.models import (
     Distance,
     PointStruct,
-    Record,
     SparseVector,
     VectorParams,
     SparseVectorParams,
     HnswConfigDiff,
-    SearchParams,
 )
 
 from src.config import settings

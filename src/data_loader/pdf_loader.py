@@ -165,7 +165,6 @@ class PDFLoader(BaseDocumentLoader):
                 if self._ocr_scanned_pages:
                     try:
                         from PIL import Image
-                        import numpy as np
                         img = Image.open(io.BytesIO(img_bytes))
                         from src.data_loader.ocr_utils import ocr_image
                         ocr_text, _ = ocr_image(img)

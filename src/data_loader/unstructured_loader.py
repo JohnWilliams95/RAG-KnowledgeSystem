@@ -7,12 +7,10 @@ from typing import Iterator, Optional
 from langchain_core.documents import Document
 
 from src.data_loader.base_loader import BaseDocumentLoader
-from src.data_loader.loader_registry import loader_registry
 
 logger = logging.getLogger(__name__)
 
 
-@loader_registry.register(extensions=[".pdf"])
 class UnstructuredPDFLoader(BaseDocumentLoader):
     def __init__(
         self,

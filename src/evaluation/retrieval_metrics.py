@@ -3,10 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from langchain_core.language_models import BaseChatModel
-
-from src.retrieval.ensemble_retriever import EnsembleRetriever
-
 logger = logging.getLogger(__name__)
 
 

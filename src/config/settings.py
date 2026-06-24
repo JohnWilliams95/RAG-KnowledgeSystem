@@ -46,6 +46,8 @@ class Settings(BaseSettings):
     pdf_use_unstructured: bool = Field(default=False, alias="PDF_USE_UNSTRUCTURED")
     pdf_extract_images: bool = Field(default=True, alias="PDF_EXTRACT_IMAGES")
 
+    redis_url: str = Field(default="", alias="REDIS_URL")
+
     retrieval_top_k: int = Field(default=20, alias="RETRIEVAL_TOP_K")
     rerank_top_n: int = Field(default=5, alias="RERANK_TOP_N")
     reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="RERANKER_MODEL")

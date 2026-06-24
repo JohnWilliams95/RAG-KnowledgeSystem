@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import sqlite3
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -20,17 +21,18 @@ class MetadataStore:
             Path(settings.project_root) / "data" / "metadata.db"
         )
         self._conn: Optional[sqlite3.Connection] = None
+        self._lock = threading.Lock()
 
     def _get_conn(self) -> sqlite3.Connection:
         if self._conn is None:
             Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
-            self._conn = sqlite3.connect(self._db_path)
+            self._conn = sqlite3.connect(self._db_path, check_same_thread=False)
             self._conn.row_factory = sqlite3.Row
             self._init_tables()
         return self._conn
 
     def _init_tables(self):
-        conn = self._get_conn()
+        conn = self._conn
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS documents (
                 doc_id TEXT PRIMARY KEY,
@@ -73,44 +75,45 @@ class MetadataStore:
         file_hash: Optional[str] = None,
         metadata: Optional[dict] = None,
     ) -> str:
-        conn = self._get_conn()
-        file_path = str(file_path)
-        file_name = Path(file_path).name
+        with self._lock:
+            conn = self._get_conn()
+            file_path = str(file_path)
+            file_name = Path(file_path).name
 
-        if file_hash is None:
-            file_hash = self._compute_file_hash(file_path)
+            if file_hash is None:
+                file_hash = self._compute_file_hash(file_path)
 
-        existing = conn.execute(
-            "SELECT doc_id, status FROM documents WHERE file_hash = ?",
-            (file_hash,),
-        ).fetchone()
+            existing = conn.execute(
+                "SELECT doc_id, status FROM documents WHERE file_hash = ?",
+                (file_hash,),
+            ).fetchone()
 
-        if existing:
-            return existing["doc_id"]
+            if existing:
+                return existing["doc_id"]
 
-        doc_id = hashlib.sha256(f"{file_path}:{file_hash}".encode()).hexdigest()[:16]
-        now = datetime.now(timezone.utc).isoformat()
+            doc_id = hashlib.sha256(f"{file_path}:{file_hash}".encode()).hexdigest()[:16]
+            now = datetime.now(timezone.utc).isoformat()
 
-        conn.execute(
-            """INSERT INTO documents
-               (doc_id, file_path, file_name, file_type, file_size, file_hash,
-                chunk_count, status, created_at, updated_at, metadata)
-               VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)""",
-            (
-                doc_id,
-                file_path,
-                file_name,
-                file_type,
-                file_size,
-                file_hash,
-                IngestionStatus.PENDING.value,
-                now,
-                now,
-                json.dumps(metadata or {}, ensure_ascii=False),
-            ),
-        )
-        conn.commit()
-        return doc_id
+            conn.execute(
+                """INSERT INTO documents
+                   (doc_id, file_path, file_name, file_type, file_size, file_hash,
+                    chunk_count, status, created_at, updated_at, metadata)
+                   VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)""",
+                (
+                    doc_id,
+                    file_path,
+                    file_name,
+                    file_type,
+                    file_size,
+                    file_hash,
+                    IngestionStatus.PENDING.value,
+                    now,
+                    now,
+                    json.dumps(metadata or {}, ensure_ascii=False),
+                ),
+            )
+            conn.commit()
+            return doc_id
 
     def update_document_status(
         self,
@@ -120,15 +123,16 @@ class MetadataStore:
         chunk_count: int = 0,
         error_message: Optional[str] = None,
     ) -> None:
-        conn = self._get_conn()
-        now = datetime.now(timezone.utc).isoformat()
-        conn.execute(
-            """UPDATE documents
-               SET status = ?, chunk_count = ?, updated_at = ?, error_message = ?
-               WHERE doc_id = ?""",
-            (status.value, chunk_count, now, error_message, doc_id),
-        )
-        conn.commit()
+        with self._lock:
+            conn = self._get_conn()
+            now = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                """UPDATE documents
+                   SET status = ?, chunk_count = ?, updated_at = ?, error_message = ?
+                   WHERE doc_id = ?""",
+                (status.value, chunk_count, now, error_message, doc_id),
+            )
+            conn.commit()
 
     def register_chunk(
         self,
@@ -139,26 +143,27 @@ class MetadataStore:
         qdrant_point_id: Optional[str] = None,
         metadata: Optional[dict] = None,
     ) -> str:
-        conn = self._get_conn()
-        chunk_id = hashlib.sha256(f"{doc_id}:{chunk_index}:{content_hash}".encode()).hexdigest()[:16]
-        now = datetime.now(timezone.utc).isoformat()
+        with self._lock:
+            conn = self._get_conn()
+            chunk_id = hashlib.sha256(f"{doc_id}:{chunk_index}:{content_hash}".encode()).hexdigest()[:16]
+            now = datetime.now(timezone.utc).isoformat()
 
-        conn.execute(
-            """INSERT OR REPLACE INTO chunks
-               (chunk_id, doc_id, chunk_index, content_hash, qdrant_point_id, created_at, metadata)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (
-                chunk_id,
-                doc_id,
-                chunk_index,
-                content_hash,
-                qdrant_point_id,
-                now,
-                json.dumps(metadata or {}, ensure_ascii=False),
-            ),
-        )
-        conn.commit()
-        return chunk_id
+            conn.execute(
+                """INSERT OR REPLACE INTO chunks
+                   (chunk_id, doc_id, chunk_index, content_hash, qdrant_point_id, created_at, metadata)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    chunk_id,
+                    doc_id,
+                    chunk_index,
+                    content_hash,
+                    qdrant_point_id,
+                    now,
+                    json.dumps(metadata or {}, ensure_ascii=False),
+                ),
+            )
+            conn.commit()
+            return chunk_id
 
     def get_document(self, doc_id: str) -> Optional[dict]:
         conn = self._get_conn()
@@ -208,10 +213,11 @@ class MetadataStore:
         return [dict(r) for r in rows]
 
     def delete_document(self, doc_id: str) -> None:
-        conn = self._get_conn()
-        conn.execute("DELETE FROM chunks WHERE doc_id = ?", (doc_id,))
-        conn.execute("DELETE FROM documents WHERE doc_id = ?", (doc_id,))
-        conn.commit()
+        with self._lock:
+            conn = self._get_conn()
+            conn.execute("DELETE FROM chunks WHERE doc_id = ?", (doc_id,))
+            conn.execute("DELETE FROM documents WHERE doc_id = ?", (doc_id,))
+            conn.commit()
 
     @staticmethod
     def _compute_file_hash(file_path: str | Path, block_size: int = 8192) -> str:

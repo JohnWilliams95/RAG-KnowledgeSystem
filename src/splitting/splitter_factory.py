@@ -36,16 +36,9 @@ class SplitterFactory:
         return RecursiveSplitter(chunk_size=cs, chunk_overlap=co)
 
     @staticmethod
-    def create_for_documents(
+    def _classify_documents(
         documents: list[Document],
-        *,
-        chunk_size: Optional[int] = None,
-        chunk_overlap: Optional[int] = None,
-        semantic_enabled: Optional[bool] = None,
-    ) -> list[BaseSplitter]:
-        cs = chunk_size or settings.chunk_size
-        co = chunk_overlap or settings.chunk_overlap
-
+    ) -> tuple[list[Document], list[Document], list[Document]]:
         code_docs: list[Document] = []
         heading_docs: list[Document] = []
         regular_docs: list[Document] = []
@@ -59,6 +52,21 @@ class SplitterFactory:
                 heading_docs.append(doc)
             else:
                 regular_docs.append(doc)
+
+        return code_docs, heading_docs, regular_docs
+
+    @staticmethod
+    def create_for_documents(
+        documents: list[Document],
+        *,
+        chunk_size: Optional[int] = None,
+        chunk_overlap: Optional[int] = None,
+        semantic_enabled: Optional[bool] = None,
+    ) -> list[BaseSplitter]:
+        cs = chunk_size or settings.chunk_size
+        co = chunk_overlap or settings.chunk_overlap
+
+        code_docs, heading_docs, regular_docs = SplitterFactory._classify_documents(documents)
 
         splitters: list[BaseSplitter] = []
         if code_docs:
@@ -84,19 +92,7 @@ class SplitterFactory:
         cs = chunk_size or settings.chunk_size
         co = chunk_overlap or settings.chunk_overlap
 
-        code_docs: list[Document] = []
-        heading_docs: list[Document] = []
-        regular_docs: list[Document] = []
-
-        for doc in documents:
-            lang = doc.metadata.get("language")
-            ext = doc.metadata.get("file_type", "")
-            if lang or ext in CODE_EXTENSIONS:
-                code_docs.append(doc)
-            elif ext in {".md", ".markdown", ".rst"}:
-                heading_docs.append(doc)
-            else:
-                regular_docs.append(doc)
+        code_docs, heading_docs, regular_docs = SplitterFactory._classify_documents(documents)
 
         all_chunks: list[Document] = []
 

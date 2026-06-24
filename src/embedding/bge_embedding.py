@@ -30,6 +30,7 @@ class BGEM3Embedding(Embeddings):
 
         self._model = None
         self._cache = EmbeddingCache() if use_cache else None
+        self._dimension: Optional[int] = None
 
     def _init_model(self):
         if self._model is not None:
@@ -45,9 +46,16 @@ class BGEM3Embedding(Embeddings):
         )
         logger.info("BGE-M3 model loaded successfully")
 
+        if self._dimension is None:
+            test_output = self._model.encode(["test"], batch_size=1)
+            self._dimension = len(test_output["dense_embeds"][0])
+            logger.info(f"Detected embedding dimension: {self._dimension}")
+
     @property
     def dimension(self) -> int:
-        return 1024
+        if self._dimension is None:
+            self._init_model()
+        return self._dimension or 1024
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         return self._embed_batch(texts, is_query=False)
@@ -107,6 +115,7 @@ class BGEM3Embedding(Embeddings):
         )
 
         dense = output["dense_embeds"]
+        dense_list = dense if isinstance(dense, list) else dense.tolist()
         sparse_vectors: list[dict[int, float]] = []
 
         if "lexical_weights" in output:
@@ -117,11 +126,10 @@ class BGEM3Embedding(Embeddings):
                         sparse_dict[int(token_id)] = float(weight)
                 sparse_vectors.append(sparse_dict)
         else:
-            dense_list = dense if isinstance(dense, list) else dense.tolist()
             for _ in texts:
                 sparse_vectors.append({})
 
-        return dense_list if isinstance(dense, list) else dense.tolist(), sparse_vectors
+        return dense_list, sparse_vectors
 
     def embed_query_with_sparse(
         self, text: str

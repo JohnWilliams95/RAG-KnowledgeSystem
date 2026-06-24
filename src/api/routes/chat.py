@@ -6,10 +6,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
-from src.api.schemas.response import (
-    ChatRequest,
-    ChatResponse,
-)
+from src.api.schemas.request import ChatRequest
+from src.api.schemas.response import ChatResponse
 from src.generation.rag_chain import RAGChain
 from src.generation.prompt_templates import PromptStyle
 from src.middleware.guardrails import Guardrails
@@ -59,17 +57,25 @@ async def chat(
 
     conversation_id = request.conversation_id or str(uuid.uuid4())
 
-    chain._enable_query_rewriting = request.enable_query_rewriting
-    chain._enable_reranking = request.enable_reranking
-    chain._enable_hyde = request.enable_hyde
-    chain._enable_stepback = request.enable_stepback
-    chain._enable_decomposition = request.enable_decomposition
-
+    prompt = None
     if request.prompt_style in ("concise", "detailed", "academic"):
         from src.generation.prompt_templates import get_prompt as _get_prompt, PromptStyle as _PS
-        chain._prompt = _get_prompt(_PS(request.prompt_style))
+        prompt = _get_prompt(_PS(request.prompt_style))
 
-    result = chain.invoke(request.question, conversation_id=conversation_id)
+    chain_config = {
+        "enable_query_rewriting": request.enable_query_rewriting,
+        "enable_reranking": request.enable_reranking,
+        "enable_hyde": request.enable_hyde,
+        "enable_stepback": request.enable_stepback,
+        "enable_decomposition": request.enable_decomposition,
+        "prompt": prompt,
+    }
+
+    result = chain.invoke(
+        request.question,
+        conversation_id=conversation_id,
+        chain_config=chain_config,
+    )
 
     return ChatResponse(
         question=request.question,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from pathlib import Path
 from typing import Optional
 
@@ -11,7 +12,7 @@ from src.api.schemas.request import (
     IngestDirectoryRequest,
     IngestFileRequest,
 )
-from src.api.schemas.response import IngestDirectoryResponse, IngestResponse
+from src.api.schemas.response import IngestResponse, IngestDirectoryResponse
 from src.ingestion.pipeline import IngestionPipeline
 from src.ingestion.document_store import DocumentStore
 from src.ingestion.metadata_store import MetadataStore
@@ -75,7 +76,8 @@ async def upload_file(
 ):
     upload_dir = Path("data/uploads")
     upload_dir.mkdir(parents=True, exist_ok=True)
-    save_path = upload_dir / file.filename
+    filename = file.filename or f"upload_{uuid.uuid4().hex[:8]}"
+    save_path = upload_dir / filename
 
     content = await file.read()
     save_path.write_bytes(content)

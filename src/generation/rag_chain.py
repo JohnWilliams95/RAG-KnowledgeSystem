@@ -93,12 +93,28 @@ class RAGChain:
         query: str,
         *,
         conversation_id: Optional[str] = None,
+        chain_config: Optional[dict] = None,
     ) -> dict:
+        cfg = chain_config or {}
+        enable_rw = cfg.get("enable_query_rewriting", self._enable_query_rewriting)
+        enable_hyde = cfg.get("enable_hyde", self._enable_hyde)
+        enable_stepback = cfg.get("enable_stepback", self._enable_stepback)
+        enable_decomp = cfg.get("enable_decomposition", self._enable_decomposition)
+        enable_rerank = cfg.get("enable_reranking", self._enable_reranking)
+        prompt = cfg.get("prompt", self._prompt)
+
         history = self._memory.get_history(conversation_id or "default")
         state = RAGState(
             query=query,
             history=[m for m in history] if history else [],
-            metadata={},
+            metadata={
+                "_enable_query_rewriting": enable_rw,
+                "_enable_hyde": enable_hyde,
+                "_enable_stepback": enable_stepback,
+                "_enable_decomposition": enable_decomp,
+                "_enable_reranking": enable_rerank,
+                "_prompt": prompt,
+            },
         )
 
         result = self._graph.invoke(state)
@@ -137,42 +153,55 @@ class RAGChain:
 
     def _rewrite_query_node(self, state: RAGState) -> dict:
         query = state["query"]
-        all_queries: list[str] = [query]
-        meta: dict = {"original_query": query}
+        meta = state.get("metadata", {})
+        enable_rw = meta.get("_enable_query_rewriting", self._enable_query_rewriting)
+        enable_hyde = meta.get("_enable_hyde", self._enable_hyde)
+        enable_stepback = meta.get("_enable_stepback", self._enable_stepback)
+        enable_decomp = meta.get("_enable_decomposition", self._enable_decomposition)
 
-        if self._enable_query_rewriting:
+        all_queries: list[str] = [query]
+        result_meta: dict = {"original_query": query}
+
+        if enable_rw:
             rewrites = self._query_rewriter.rewrite(query)
             all_queries.extend(rewrites[1:])
-            meta["rewrites"] = rewrites[1:]
+            result_meta["rewrites"] = rewrites[1:]
 
-        if self._enable_decomposition and len(query) > 50:
+        if enable_decomp and len(query) > 50:
             sub_queries = self._query_decomposer.decompose(query)
             if sub_queries != [query]:
                 all_queries.extend(sub_queries)
-                meta["sub_queries"] = sub_queries
+                result_meta["sub_queries"] = sub_queries
 
-        if self._enable_hyde:
+        if enable_hyde:
             hyde_doc = self._hyde_generator.generate(query)
             all_queries.append(hyde_doc)
-            meta["hyde_document"] = hyde_doc
+            result_meta["hyde_document"] = hyde_doc
 
-        if self._enable_stepback:
+        if enable_stepback:
             stepback_queries = self._stepback.generate(query)
             all_queries.extend(stepback_queries)
-            meta["stepback_queries"] = stepback_queries
+            result_meta["stepback_queries"] = stepback_queries
 
-        return {"rewritten_queries": all_queries, "metadata": meta}
+        return {"rewritten_queries": all_queries, "metadata": result_meta}
 
     def _retrieve_node(self, state: RAGState) -> dict:
+        meta = state.get("metadata", {})
+        enable_rerank = meta.get("_enable_reranking", self._enable_reranking)
+        enable_hyde = meta.get("_enable_hyde", self._enable_hyde)
         queries = state.get("rewritten_queries", [state["query"]])
-        all_documents = []
+        hyde_doc = meta.get("hyde_document")
 
+        all_documents = []
         seen_ids: set[str] = set()
+
         for q in queries:
-            docs = self._retriever.retrieve(
-                q,
-                rerank_enabled=self._enable_reranking,
-            )
+            if enable_hyde and hyde_doc and q == hyde_doc:
+                results = self._retriever.dense_only(q, top_k=settings.retrieval_top_k)
+                docs = [doc for doc, _ in results]
+            else:
+                docs = self._retriever.retrieve(q, rerank_enabled=enable_rerank)
+
             for doc in docs:
                 doc_id = doc.metadata.get("_id", doc.page_content[:100])
                 if doc_id not in seen_ids:
@@ -190,11 +219,13 @@ class RAGChain:
         context = state.get("context", "")
         query = state["query"]
         history = state.get("history", [])
+        meta = state.get("metadata", {})
+        prompt = meta.get("_prompt", self._prompt)
 
         answer = self._synthesizer.synthesize(
             query=query,
             context=context,
-            prompt=self._prompt,
+            prompt=prompt,
             history=history if history else None,
         )
 

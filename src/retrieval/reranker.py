@@ -61,8 +61,11 @@ class Reranker:
 
         doc_scores: list[tuple[Document, float]] = []
         for doc, score in zip(documents, scores):
-            doc.metadata["_rerank_score"] = float(score)
-            doc_scores.append((doc, float(score)))
+            doc_copy = Document(
+                page_content=doc.page_content,
+                metadata={**doc.metadata, "_rerank_score": float(score)},
+            )
+            doc_scores.append((doc_copy, float(score)))
 
         doc_scores.sort(key=lambda x: x[1], reverse=True)
 
