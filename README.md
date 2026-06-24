@@ -10,7 +10,7 @@
 | LLM | `init_chat_model()` 通用初始化 | 不绑定厂商，支持 deepseek/openai/anthropic/ollama 等 |
 | Embedding | BAAI/bge-m3 | 免费、1024维、多语言SOTA、支持稀疏+稠密双向量 |
 | 向量库 | Qdrant | Rust高性能，原生混合检索，Docker一键部署 |
-| 重排序 | BAAI/bge-reranker-v2-m3 | 免费、C-MTEB排行榜第一 |
+| 重排序 | |
 | 多路召回 | Dense + Sparse 单次查询 | BGE-M3双向量 + Qdrant原生融合，无需手动维护BM25 |
 | Query重写 | Multi-Query + HyDE + Step-Back | LangChain官方推荐的Query增强手段 |
 | 后端 | FastAPI | 高性能、类型安全、自动生成API文档 |
