@@ -1,5 +1,5 @@
 [project]
-name = "rag-langchain-v2"
+name = "rag-knowledgesystem"
 version = "0.1.0"
 description = "Production-ready RAG system with LangChain, Qdrant, and BGE-M3"
 readme = "README.md"

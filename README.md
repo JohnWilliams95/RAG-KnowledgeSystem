@@ -1,4 +1,4 @@
-# RAG-Langchain-v2
+# RAG-KnowledgeSystem
 
 生产级 RAG 系统，基于 LangChain + LangGraph + Qdrant + BGE-M3 构建。
 
@@ -21,7 +21,7 @@
 ## 项目结构
 
 ```
-RAG-Langchain-v2/
+RAG-KnowledgeSystem/
 ├── pyproject.toml                 # uv项目配置
 ├── .env.example                   # 环境变量模板
 ├── README.md
@@ -188,7 +188,7 @@ pip install uv
 
 # 克隆项目
 git clone <repo-url>
-cd RAG-Langchain-v2
+cd RAG-KnowledgeSystem
 
 # 创建虚拟环境并安装依赖
 uv sync
