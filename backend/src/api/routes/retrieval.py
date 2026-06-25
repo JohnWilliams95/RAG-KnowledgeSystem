@@ -56,33 +56,41 @@ async def search(
     )
 
 
-@router.post("/dense")
+@router.post("/dense", response_model=RetrievalResponse)
 async def dense_search(
     request: RetrievalRequest,
     retriever: EnsembleRetriever = Depends(get_retriever),
 ):
     results = retriever.dense_only(request.query, top_k=request.top_k)
-    docs = []
+    retrieved_docs = []
     for doc, score in results:
-        docs.append({
-            "page_content": doc.page_content,
-            "metadata": doc.metadata,
-            "score": score,
-        })
-    return {"query": request.query, "results": docs, "total": len(docs)}
+        retrieved_docs.append(RetrievedDocument(
+            page_content=doc.page_content,
+            metadata=doc.metadata,
+            score=score,
+        ))
+    return RetrievalResponse(
+        query=request.query,
+        documents=retrieved_docs,
+        total=len(retrieved_docs),
+    )
 
 
-@router.post("/sparse")
+@router.post("/sparse", response_model=RetrievalResponse)
 async def sparse_search(
     request: RetrievalRequest,
     retriever: EnsembleRetriever = Depends(get_retriever),
 ):
     results = retriever.sparse_only(request.query, top_k=request.top_k)
-    docs = []
+    retrieved_docs = []
     for doc, score in results:
-        docs.append({
-            "page_content": doc.page_content,
-            "metadata": doc.metadata,
-            "score": score,
-        })
-    return {"query": request.query, "results": docs, "total": len(docs)}
+        retrieved_docs.append(RetrievedDocument(
+            page_content=doc.page_content,
+            metadata=doc.metadata,
+            score=score,
+        ))
+    return RetrievalResponse(
+        query=request.query,
+        documents=retrieved_docs,
+        total=len(retrieved_docs),
+    )

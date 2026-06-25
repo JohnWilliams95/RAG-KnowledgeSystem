@@ -212,6 +212,17 @@ class MetadataStore:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def count_documents(self, *, status: Optional[str] = None) -> int:
+        conn = self._get_conn()
+        if status:
+            row = conn.execute(
+                "SELECT COUNT(*) as cnt FROM documents WHERE status = ?",
+                (status,),
+            ).fetchone()
+        else:
+            row = conn.execute("SELECT COUNT(*) as cnt FROM documents").fetchone()
+        return row["cnt"] if row else 0
+
     def delete_document(self, doc_id: str) -> None:
         with self._lock:
             conn = self._get_conn()

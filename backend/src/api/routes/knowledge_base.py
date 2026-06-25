@@ -38,7 +38,8 @@ async def list_documents(
     from backend.src.api.dependencies import get_metadata_store
     ms = get_metadata_store()
     docs = ms.list_documents(status=status, limit=limit, offset=offset)
-    return {"documents": docs, "total": len(docs)}
+    total = ms.count_documents(status=status)
+    return {"documents": docs, "total": total}
 
 
 @router.get("/documents/{doc_id}")
