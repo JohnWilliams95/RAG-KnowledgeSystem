@@ -5,12 +5,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
-from backend.src.api.schemas.response import (
+from src.api.schemas.request import RetrievalRequest
+from src.api.schemas.response import (
     RetrievedDocument,
-    RetrievalRequest,
     RetrievalResponse,
 )
-from backend.src.retrieval.ensemble_retriever import EnsembleRetriever
+from src.retrieval.ensemble_retriever import EnsembleRetriever
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ _retriever: Optional[EnsembleRetriever] = None
 def get_retriever() -> EnsembleRetriever:
     global _retriever
     if _retriever is None:
-        from backend.src.api.dependencies import get_ensemble_retriever
+        from src.api.dependencies import get_ensemble_retriever
         _retriever = get_ensemble_retriever()
     return _retriever
 

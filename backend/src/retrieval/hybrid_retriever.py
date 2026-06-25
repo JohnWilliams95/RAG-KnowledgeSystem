@@ -6,8 +6,8 @@ from typing import Optional
 from langchain_core.documents import Document
 
 from src.config import settings
-from backend.src.retrieval.vector_retriever import VectorRetriever
-from backend.src.retrieval.bm25_retriever import BM25Retriever
+from src.retrieval.vector_retriever import VectorRetriever
+from src.retrieval.bm25_retriever import BM25Retriever
 
 logger = logging.getLogger(__name__)
 

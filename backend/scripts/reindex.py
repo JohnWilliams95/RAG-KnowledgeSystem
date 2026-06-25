@@ -7,10 +7,10 @@ import argparse
 import logging
 
 from src.config import settings
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.ingestion.metadata_store import MetadataStore
-from backend.src.ingestion.pipeline import IngestionPipeline
-from backend.src.embedding.bge_embedding import BGEM3Embedding
+from src.ingestion.document_store import DocumentStore
+from src.ingestion.metadata_store import MetadataStore
+from src.ingestion.pipeline import IngestionPipeline
+from src.embedding.bge_embedding import BGEM3Embedding
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

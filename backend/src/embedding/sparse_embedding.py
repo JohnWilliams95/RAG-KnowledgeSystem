@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 
 from src.config import settings
-from backend.src.embedding.bge_embedding import BGEM3Embedding
+from src.embedding.bge_embedding import BGEM3Embedding
 
 logger = logging.getLogger(__name__)
 

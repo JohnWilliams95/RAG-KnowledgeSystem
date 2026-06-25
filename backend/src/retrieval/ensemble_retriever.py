@@ -6,12 +6,12 @@ from typing import Optional
 from langchain_core.documents import Document
 
 from src.config import settings
-from backend.src.embedding.bge_embedding import BGEM3Embedding
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.retrieval.vector_retriever import VectorRetriever
-from backend.src.retrieval.bm25_retriever import BM25Retriever
-from backend.src.retrieval.hybrid_retriever import HybridRetriever
-from backend.src.retrieval.reranker import Reranker
+from src.embedding.bge_embedding import BGEM3Embedding
+from src.ingestion.document_store import DocumentStore
+from src.retrieval.vector_retriever import VectorRetriever
+from src.retrieval.bm25_retriever import BM25Retriever
+from src.retrieval.hybrid_retriever import HybridRetriever
+from src.retrieval.reranker import Reranker
 
 logger = logging.getLogger(__name__)
 

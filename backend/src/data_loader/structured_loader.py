@@ -7,8 +7,8 @@ from typing import Iterator, Optional
 import yaml
 from langchain_core.documents import Document
 
-from backend.src.data_loader.base_loader import BaseDocumentLoader
-from backend.src.data_loader.loader_registry import loader_registry
+from src.data_loader.base_loader import BaseDocumentLoader
+from src.data_loader.loader_registry import loader_registry
 
 STRUCTURED_EXTENSIONS = [".json", ".yaml", ".yml"]
 

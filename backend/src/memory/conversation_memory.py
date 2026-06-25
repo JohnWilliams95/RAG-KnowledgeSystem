@@ -117,7 +117,7 @@ class ConversationMemory:
         if not history_text.strip():
             return new_question
 
-        from backend.src.generation.prompt_templates import CONDENSE_QUESTION_PROMPT
+        from src.generation.prompt_templates import CONDENSE_QUESTION_PROMPT
 
         chain = CONDENSE_QUESTION_PROMPT | llm
         response = chain.invoke({

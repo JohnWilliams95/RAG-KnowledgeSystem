@@ -9,11 +9,11 @@ from typing import Optional
 from langchain_core.documents import Document
 
 from src.config import settings
-from backend.src.config.constants import IngestionStatus
-from backend.src.data_loader.loader_registry import loader_registry
-from backend.src.splitting.splitter_factory import SplitterFactory
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.ingestion.metadata_store import MetadataStore
+from src.config.constants import IngestionStatus
+from src.data_loader.loader_registry import loader_registry
+from src.splitting.splitter_factory import SplitterFactory
+from src.ingestion.document_store import DocumentStore
+from src.ingestion.metadata_store import MetadataStore
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ class IngestionPipeline:
         }
 
     def _scan_directory(self, directory: Path, *, recursive: bool = True) -> list[Path]:
-        from backend.src.config.constants import SUPPORTED_EXTENSIONS
+        from src.config.constants import SUPPORTED_EXTENSIONS
 
         files: list[Path] = []
         if recursive:

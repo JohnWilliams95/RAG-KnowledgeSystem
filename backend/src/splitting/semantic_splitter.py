@@ -6,7 +6,7 @@ from typing import Optional
 from langchain_core.documents import Document
 
 from src.config import settings
-from backend.src.splitting.base_splitter import BaseSplitter
+from src.splitting.base_splitter import BaseSplitter
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class SemanticSplitter(BaseSplitter):
         split_points: list[int],
         doc: Document,
     ) -> list[Document]:
-        from backend.src.splitting.fixed_splitter import FixedSplitter
+        from src.splitting.fixed_splitter import FixedSplitter
 
         boundaries = [0] + split_points + [len(sentences)]
         chunks: list[Document] = []

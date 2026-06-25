@@ -5,13 +5,13 @@ from typing import Optional
 from langchain_core.documents import Document
 
 from src.config import settings
-from backend.src.config.constants import CODE_EXTENSIONS
-from backend.src.splitting.base_splitter import BaseSplitter
-from backend.src.splitting.semantic_splitter import SemanticSplitter
-from backend.src.splitting.recursive_splitter import RecursiveSplitter
-from backend.src.splitting.code_splitter import CodeSplitter
-from backend.src.splitting.heading_splitter import HeadingSplitter
-from backend.src.splitting.paragraph_splitter import ParagraphSplitter
+from src.config.constants import CODE_EXTENSIONS
+from src.splitting.base_splitter import BaseSplitter
+from src.splitting.semantic_splitter import SemanticSplitter
+from src.splitting.recursive_splitter import RecursiveSplitter
+from src.splitting.code_splitter import CodeSplitter
+from src.splitting.heading_splitter import HeadingSplitter
+from src.splitting.paragraph_splitter import ParagraphSplitter
 
 
 class SplitterFactory:

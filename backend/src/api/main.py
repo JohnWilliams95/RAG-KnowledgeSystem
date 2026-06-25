@@ -7,24 +7,24 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.api.routes import chat, document, knowledge_base
+from src.api.routes import chat, document, knowledge_base
 from src.config import settings
-from backend.src.api.routes import retrieval
-from backend.src.middleware.trace import TraceMiddleware
+from src.api.routes import retrieval
+from src.middleware.trace import TraceMiddleware
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("RAG-Langchain-v2 API starting up...")
+    logger.info("RAG-KnowledgeSystem API starting up...")
     settings.ensure_directories()
     yield
-    logger.info("RAG-Langchain-v2 API shutting down...")
+    logger.info("RAG-KnowledgeSystem API shutting down...")
 
 
 app = FastAPI(
-    title="RAG-Langchain-v2",
+    title="RAG-KnowledgeSystem",
     description="Production-ready RAG system with LangChain, Qdrant, and BGE-M3",
     version="0.1.0",
     lifespan=lifespan,
@@ -50,7 +50,7 @@ app.include_router(knowledge_base.router, prefix="/api/v1")
 @app.get("/", tags=["root"])
 async def root():
     return {
-        "name": "RAG-Langchain-v2",
+        "name": "RAG-KnowledgeSystem",
         "version": "0.1.0",
         "docs": "/docs",
     }
@@ -59,7 +59,7 @@ async def root():
 @app.get("/health", tags=["health"])
 async def health_check():
     try:
-        from backend.src.api.dependencies import get_document_store
+        from src.api.dependencies import get_document_store
         ds = get_document_store()
         info = ds.get_collection_info()
         return {

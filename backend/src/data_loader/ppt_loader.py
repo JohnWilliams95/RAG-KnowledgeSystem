@@ -6,11 +6,10 @@ from typing import Iterator, Optional
 from langchain_core.documents import Document
 from pptx import Presentation
 from pptx.shapes.base import BaseShape
-from pptx.shapes.table import Table
-from pptx.shapes.group import GroupShapes
+from pptx.table import Table
 
-from backend.src.data_loader.base_loader import BaseDocumentLoader
-from backend.src.data_loader.loader_registry import loader_registry
+from src.data_loader.base_loader import BaseDocumentLoader
+from src.data_loader.loader_registry import loader_registry
 
 
 @loader_registry.register(extensions=[".pptx"])
@@ -51,7 +50,7 @@ class PptxLoader(BaseDocumentLoader):
             return shape.text_frame.text.strip()
         if shape.has_table:
             return self._extract_table(shape.table)
-        if isinstance(shape, GroupShapes):
+        if hasattr(shape, 'shapes'):
             parts = []
             for s in shape.shapes:
                 t = self._extract_shape_text(s)

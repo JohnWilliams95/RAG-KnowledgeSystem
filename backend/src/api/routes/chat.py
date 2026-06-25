@@ -6,11 +6,11 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
-from backend.src.api.schemas.request import ChatRequest
-from backend.src.api.schemas.response import ChatResponse
-from backend.src.generation.rag_chain import RAGChain
-from backend.src.generation.prompt_templates import PromptStyle
-from backend.src.middleware.guardrails import Guardrails
+from src.api.schemas.request import ChatRequest
+from src.api.schemas.response import ChatResponse
+from src.generation.rag_chain import RAGChain
+from src.generation.prompt_templates import PromptStyle
+from src.middleware.guardrails import Guardrails
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ _guardrails: Optional[Guardrails] = None
 def get_rag_chain() -> RAGChain:
     global _rag_chain
     if _rag_chain is None:
-        from backend.src.api.dependencies import get_llm, get_ensemble_retriever
+        from src.api.dependencies import get_llm, get_ensemble_retriever
         llm = get_llm()
         retriever = get_ensemble_retriever()
         _rag_chain = RAGChain(llm=llm, retriever=retriever)
@@ -59,7 +59,7 @@ async def chat(
 
     prompt = None
     if request.prompt_style in ("concise", "detailed", "academic"):
-        from backend.src.generation.prompt_templates import get_prompt as _get_prompt, PromptStyle as _PS
+        from src.generation.prompt_templates import get_prompt as _get_prompt, PromptStyle as _PS
         prompt = _get_prompt(_PS(request.prompt_style))
 
     chain_config = {
@@ -112,7 +112,7 @@ async def chat_stream(
 
 @router.delete("/history/{conversation_id}")
 async def clear_history(conversation_id: str):
-    from backend.src.api.dependencies import get_memory
+    from src.api.dependencies import get_memory
     memory = get_memory()
     memory.clear(conversation_id)
     return {"status": "success", "message": f"History for {conversation_id} cleared"}

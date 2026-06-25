@@ -9,9 +9,9 @@ from typing import Iterator, Optional
 import fitz
 from langchain_core.documents import Document
 
-from backend.src.data_loader.base_loader import BaseDocumentLoader
-from backend.src.data_loader.loader_registry import loader_registry
-from backend.src.utils.ocr_utils import ocr_pdf_page, is_scanned_page
+from src.data_loader.base_loader import BaseDocumentLoader
+from src.data_loader.loader_registry import loader_registry
+from src.utils.ocr_utils import ocr_pdf_page, is_scanned_page
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class PDFLoader(BaseDocumentLoader):
 
     def _load_with_unstructured(self) -> Iterator[Document]:
         try:
-            from backend.src.data_loader.unstructured_loader import UnstructuredPDFLoader
+            from src.data_loader.unstructured_loader import UnstructuredPDFLoader
             loader = UnstructuredPDFLoader(
                 self._file_path,
                 metadata=self._metadata,
@@ -166,7 +166,7 @@ class PDFLoader(BaseDocumentLoader):
                     try:
                         from PIL import Image
                         img = Image.open(io.BytesIO(img_bytes))
-                        from backend.src.utils.ocr_utils import ocr_image
+                        from src.utils.ocr_utils import ocr_image
                         ocr_text, _ = ocr_image(img)
                     except Exception:
                         pass

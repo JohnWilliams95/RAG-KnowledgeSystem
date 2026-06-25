@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from langchain_core.documents import Document
 
-from backend.src.splitting.base_splitter import BaseSplitter
+from src.splitting.base_splitter import BaseSplitter
 
 
 class FixedSplitter(BaseSplitter):

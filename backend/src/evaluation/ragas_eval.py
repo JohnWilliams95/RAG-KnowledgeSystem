@@ -5,7 +5,7 @@ from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
 
-from backend.src.generation.rag_chain import RAGChain
+from src.generation.rag_chain import RAGChain
 
 logger = logging.getLogger(__name__)
 

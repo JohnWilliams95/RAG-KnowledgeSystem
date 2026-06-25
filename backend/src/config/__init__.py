@@ -1,5 +1,5 @@
-from backend.src.config.settings import settings
-from backend.src.config.constants import (
+from src.config.settings import settings
+from src.config.constants import (
     FileType,
     EXTENSION_MAP,
     SUPPORTED_EXTENSIONS,

@@ -6,7 +6,7 @@ from typing import Optional
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate
 
-from backend.src.generation.prompt_templates import SUMMARIZE_CONTEXT_PROMPT
+from src.generation.prompt_templates import SUMMARIZE_CONTEXT_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -151,5 +151,5 @@ class ResponseSynthesizer:
         return chunks
 
     def _get_default_prompt(self):
-        from backend.src.generation.prompt_templates import RAG_QA_PROMPT
+        from src.generation.prompt_templates import RAG_QA_PROMPT
         return RAG_QA_PROMPT

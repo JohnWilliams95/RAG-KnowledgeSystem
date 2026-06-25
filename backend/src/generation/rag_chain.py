@@ -9,15 +9,15 @@ from langgraph.graph import END, StateGraph
 from typing import TypedDict
 
 from src.config import settings
-from backend.src.generation.context_builder import ContextBuilder
-from backend.src.generation.prompt_templates import PromptStyle, get_prompt
-from backend.src.generation.response_synthesizer import ResponseSynthesizer
-from backend.src.query_rewriting.hyde_generator import HyDEGenerator
-from backend.src.query_rewriting.query_decomposer import QueryDecomposer
-from backend.src.query_rewriting.query_rewriter import QueryRewriter
-from backend.src.query_rewriting.stepback_prompt import StepBackPrompting
-from backend.src.retrieval.ensemble_retriever import EnsembleRetriever
-from backend.src.memory.conversation_memory import ConversationMemory
+from src.generation.context_builder import ContextBuilder
+from src.generation.prompt_templates import PromptStyle, get_prompt
+from src.generation.response_synthesizer import ResponseSynthesizer
+from src.query_rewriting.hyde_generator import HyDEGenerator
+from src.query_rewriting.query_decomposer import QueryDecomposer
+from src.query_rewriting.query_rewriter import QueryRewriter
+from src.query_rewriting.stepback_prompt import StepBackPrompting
+from src.retrieval.ensemble_retriever import EnsembleRetriever
+from src.memory.conversation_memory import ConversationMemory
 
 logger = logging.getLogger(__name__)
 

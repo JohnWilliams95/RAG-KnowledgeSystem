@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from langchain_core.documents import Document
 
-from backend.src.splitting.base_splitter import BaseSplitter
-from backend.src.splitting.fixed_splitter import FixedSplitter
+from src.splitting.base_splitter import BaseSplitter
+from src.splitting.fixed_splitter import FixedSplitter
 
 
 class ParagraphSplitter(BaseSplitter):

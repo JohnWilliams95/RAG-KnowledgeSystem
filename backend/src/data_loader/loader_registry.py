@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 from typing import Optional, Type
 
-from backend.src.config.constants import EXTENSION_MAP
-from backend.src.data_loader.base_loader import BaseDocumentLoader
+from src.config.constants import EXTENSION_MAP
+from src.data_loader.base_loader import BaseDocumentLoader
 
 logger = logging.getLogger(__name__)
 

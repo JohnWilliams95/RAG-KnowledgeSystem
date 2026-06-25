@@ -6,11 +6,11 @@ from typing import Optional
 from langchain_core.language_models import BaseChatModel
 
 from src.config import settings
-from backend.src.embedding.bge_embedding import BGEM3Embedding
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.ingestion.metadata_store import MetadataStore
-from backend.src.memory.conversation_memory import ConversationMemory
-from backend.src.retrieval.ensemble_retriever import EnsembleRetriever
+from src.embedding.bge_embedding import BGEM3Embedding
+from src.ingestion.document_store import DocumentStore
+from src.ingestion.metadata_store import MetadataStore
+from src.memory.conversation_memory import ConversationMemory
+from src.retrieval.ensemble_retriever import EnsembleRetriever
 
 
 @lru_cache()

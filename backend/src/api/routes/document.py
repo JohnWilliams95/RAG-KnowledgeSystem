@@ -7,15 +7,15 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, UploadFile
 
-from backend.src.api.schemas.request import (
+from src.api.schemas.request import (
     DeleteDocumentRequest,
     IngestDirectoryRequest,
     IngestFileRequest,
 )
-from backend.src.api.schemas.response import IngestResponse, IngestDirectoryResponse
-from backend.src.ingestion.pipeline import IngestionPipeline
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.ingestion.metadata_store import MetadataStore
+from src.api.schemas.response import IngestResponse, IngestDirectoryResponse
+from src.ingestion.pipeline import IngestionPipeline
+from src.ingestion.document_store import DocumentStore
+from src.ingestion.metadata_store import MetadataStore
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ _pipeline: Optional[IngestionPipeline] = None
 def get_pipeline() -> IngestionPipeline:
     global _pipeline
     if _pipeline is None:
-        from backend.src.api.dependencies import get_document_store, get_metadata_store
+        from src.api.dependencies import get_document_store, get_metadata_store
         ds = get_document_store()
         ms = get_metadata_store()
         _pipeline = IngestionPipeline(ds, ms)

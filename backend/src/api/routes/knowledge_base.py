@@ -5,10 +5,10 @@ from typing import Optional
 
 from fastapi import APIRouter
 
-from backend.src.api.schemas.response import KnowledgeBaseInfo
+from src.api.schemas.response import KnowledgeBaseInfo
 from src.config import settings
-from backend.src.ingestion.document_store import DocumentStore
-from backend.src.ingestion.metadata_store import MetadataStore
+from src.ingestion.document_store import DocumentStore
+from src.ingestion.metadata_store import MetadataStore
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/knowledge-base", tags=["knowledge-base"])
 
 @router.get("/info", response_model=KnowledgeBaseInfo)
 async def get_knowledge_base_info():
-    from backend.src.api.dependencies import get_document_store, get_metadata_store
+    from src.api.dependencies import get_document_store, get_metadata_store
     ds = get_document_store()
     info = ds.get_collection_info()
     return KnowledgeBaseInfo(
@@ -35,7 +35,7 @@ async def list_documents(
     offset: int = 0,
     status: Optional[str] = None,
 ):
-    from backend.src.api.dependencies import get_metadata_store
+    from src.api.dependencies import get_metadata_store
     ms = get_metadata_store()
     docs = ms.list_documents(status=status, limit=limit, offset=offset)
     total = ms.count_documents(status=status)
@@ -44,7 +44,7 @@ async def list_documents(
 
 @router.get("/documents/{doc_id}")
 async def get_document(doc_id: str):
-    from backend.src.api.dependencies import get_metadata_store
+    from src.api.dependencies import get_metadata_store
     ms = get_metadata_store()
     doc = ms.get_document(doc_id)
     if not doc:
@@ -55,7 +55,7 @@ async def get_document(doc_id: str):
 
 @router.post("/init")
 async def init_collection():
-    from backend.src.api.dependencies import get_document_store
+    from src.api.dependencies import get_document_store
     ds = get_document_store()
     ds.init_collection()
     return {"status": "success", "message": f"Collection '{settings.qdrant_collection_name}' initialized"}
@@ -63,7 +63,7 @@ async def init_collection():
 
 @router.get("/stats")
 async def get_stats():
-    from backend.src.api.dependencies import get_document_store, get_metadata_store
+    from src.api.dependencies import get_document_store, get_metadata_store
     ds = get_document_store()
     ms = get_metadata_store()
     info = ds.get_collection_info()

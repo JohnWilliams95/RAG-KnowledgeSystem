@@ -7,7 +7,7 @@ import numpy as np
 from langchain_core.embeddings import Embeddings
 
 from src.config import settings
-from backend.src.embedding.embedding_cache import EmbeddingCache
+from src.embedding.embedding_cache import EmbeddingCache
 
 logger = logging.getLogger(__name__)
 

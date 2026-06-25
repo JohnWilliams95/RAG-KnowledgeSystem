@@ -16,8 +16,8 @@ from qdrant_client.models import (
 )
 
 from src.config import settings
-from backend.src.embedding.bge_embedding import BGEM3Embedding
-from backend.src.ingestion.document_store import DocumentStore
+from src.embedding.bge_embedding import BGEM3Embedding
+from src.ingestion.document_store import DocumentStore
 
 logger = logging.getLogger(__name__)
 

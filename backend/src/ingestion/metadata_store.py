@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from src.config import settings
-from backend.src.config.constants import IngestionStatus
+from src.config.constants import IngestionStatus
 
 logger = logging.getLogger(__name__)
 

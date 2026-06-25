@@ -5,8 +5,8 @@ from typing import Iterator, Optional
 
 from langchain_core.documents import Document
 
-from backend.src.data_loader.base_loader import BaseDocumentLoader
-from backend.src.data_loader.loader_registry import loader_registry
+from src.data_loader.base_loader import BaseDocumentLoader
+from src.data_loader.loader_registry import loader_registry
 
 CODE_EXTENSIONS = [".py", ".js", ".ts", ".tsx", ".java", ".go", ".rs", ".cpp", ".c", ".h"]
 

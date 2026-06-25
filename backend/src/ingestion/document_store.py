@@ -17,8 +17,8 @@ from qdrant_client.models import (
 )
 
 from src.config import settings
-from backend.src.embedding.bge_embedding import BGEM3Embedding
-from backend.src.embedding.sparse_embedding import SparseEmbedding
+from src.embedding.bge_embedding import BGEM3Embedding
+from src.embedding.sparse_embedding import SparseEmbedding
 
 logger = logging.getLogger(__name__)
 

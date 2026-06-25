@@ -4,7 +4,7 @@ from typing import Optional
 
 from langchain_core.documents import Document
 
-from backend.src.splitting.base_splitter import BaseSplitter
+from src.splitting.base_splitter import BaseSplitter
 
 
 class RecursiveSplitter(BaseSplitter):

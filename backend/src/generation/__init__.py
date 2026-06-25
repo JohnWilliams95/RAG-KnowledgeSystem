@@ -1,4 +1,4 @@
-from backend.src.generation.prompt_templates import (
+from src.generation.prompt_templates import (
     RAG_QA_PROMPT,
     RAG_QA_CONCISE_PROMPT,
     RAG_QA_DETAILED_PROMPT,
@@ -7,9 +7,9 @@ from backend.src.generation.prompt_templates import (
     PromptStyle,
     get_prompt,
 )
-from backend.src.generation.context_builder import ContextBuilder
-from backend.src.generation.response_synthesizer import ResponseSynthesizer
-from backend.src.generation.rag_chain import RAGChain, RAGState
+from src.generation.context_builder import ContextBuilder
+from src.generation.response_synthesizer import ResponseSynthesizer
+from src.generation.rag_chain import RAGChain, RAGState
 
 __all__ = [
     "RAG_QA_PROMPT",
