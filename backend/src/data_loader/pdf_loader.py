@@ -11,7 +11,7 @@ from langchain_core.documents import Document
 
 from backend.src.data_loader.base_loader import BaseDocumentLoader
 from backend.src.data_loader.loader_registry import loader_registry
-from backend.src.data_loader.ocr_utils import ocr_pdf_page, is_scanned_page
+from backend.src.utils.ocr_utils import ocr_pdf_page, is_scanned_page
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +166,7 @@ class PDFLoader(BaseDocumentLoader):
                     try:
                         from PIL import Image
                         img = Image.open(io.BytesIO(img_bytes))
-                        from backend.src.data_loader.ocr_utils import ocr_image
+                        from backend.src.utils.ocr_utils import ocr_image
                         ocr_text, _ = ocr_image(img)
                     except Exception:
                         pass

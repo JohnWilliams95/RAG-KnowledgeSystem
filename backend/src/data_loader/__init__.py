@@ -12,7 +12,7 @@ from backend.src.data_loader.code_loader import CodeLoader
 from backend.src.data_loader.structured_loader import StructuredDataLoader
 from backend.src.data_loader.web_scraper import WebScraper
 from backend.src.data_loader.unstructured_loader import UnstructuredPDFLoader
-from backend.src.data_loader.ocr_utils import ocr_image, ocr_pdf_page, is_scanned_page
+from backend.src.utils.ocr_utils import ocr_image, ocr_pdf_page, is_scanned_page
 
 __all__ = [
     "BaseDocumentLoader",
