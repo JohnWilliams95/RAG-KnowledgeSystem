@@ -48,7 +48,10 @@ class BGEM3Embedding(Embeddings):
 
         if self._dimension is None:
             test_output = self._model.encode(["test"], batch_size=1)
-            self._dimension = len(test_output["dense_embeds"][0])
+            if isinstance(test_output, dict):
+                self._dimension = len(test_output["dense_embeds"][0])
+            else:
+                self._dimension = len(test_output[0])
             logger.info(f"Detected embedding dimension: {self._dimension}")
 
     @property
@@ -101,7 +104,9 @@ class BGEM3Embedding(Embeddings):
 
     def _compute_dense(self, texts: list[str]) -> np.ndarray:
         output = self._model.encode(texts, batch_size=self._batch_size)
-        return output["dense_embeds"]
+        if isinstance(output, dict):
+            return output["dense_embeds"]
+        return output
 
     def embed_documents_with_sparse(
         self, texts: list[str]
@@ -114,20 +119,24 @@ class BGEM3Embedding(Embeddings):
             return_sparse=True,
         )
 
-        dense = output["dense_embeds"]
-        dense_list = dense if isinstance(dense, list) else dense.tolist()
-        sparse_vectors: list[dict[int, float]] = []
+        if isinstance(output, dict):
+            dense = output["dense_embeds"]
+            dense_list = dense if isinstance(dense, list) else dense.tolist()
+            sparse_vectors: list[dict[int, float]] = []
 
-        if "lexical_weights" in output:
-            for sparse_emb in output["lexical_weights"]:
-                sparse_dict = {}
-                for token_id, weight in sparse_emb.items():
-                    if weight > 0:
-                        sparse_dict[int(token_id)] = float(weight)
-                sparse_vectors.append(sparse_dict)
+            if "lexical_weights" in output:
+                for sparse_emb in output["lexical_weights"]:
+                    sparse_dict = {}
+                    for token_id, weight in sparse_emb.items():
+                        if weight > 0:
+                            sparse_dict[int(token_id)] = float(weight)
+                    sparse_vectors.append(sparse_dict)
+            else:
+                for _ in texts:
+                    sparse_vectors.append({})
         else:
-            for _ in texts:
-                sparse_vectors.append({})
+            dense_list = output if isinstance(output, list) else output.tolist()
+            sparse_vectors = [{} for _ in texts]
 
         return dense_list, sparse_vectors
 

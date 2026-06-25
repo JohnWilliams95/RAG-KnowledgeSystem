@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     embedding_use_fp16: bool = Field(default=False, alias="EMBEDDING_USE_FP16")
     embedding_batch_size: int = Field(default=32, alias="EMBEDDING_BATCH_SIZE")
     embedding_cache_dir: str = Field(default="./cache/embeddings", alias="EMBEDDING_CACHE_DIR")
+    hf_endpoint: str = Field(default="", alias="HF_ENDPOINT")
 
     qdrant_host: str = Field(default="localhost", alias="QDRANT_HOST")
     qdrant_port: int = Field(default=6333, alias="QDRANT_PORT")
@@ -75,6 +76,8 @@ class Settings(BaseSettings):
 
     def ensure_directories(self) -> None:
         os.makedirs(self.embedding_cache_dir, exist_ok=True)
+        if self.hf_endpoint:
+            os.environ["HF_ENDPOINT"] = self.hf_endpoint
 
     @classmethod
     def get_settings(cls) -> "Settings":

@@ -43,17 +43,15 @@ class VectorRetriever:
     ) -> list[Document]:
         k = top_k or self._top_k
         dense_vector = self._embedding_model.embed_query(query)
-        results = self._document_store.client.search(
+        results = self._document_store.client.query_points(
             collection_name=self._document_store._collection_name,
-            query_vector=NamedVector(
-                name=DocumentStore.DENSE_VECTOR_NAME,
-                vector=dense_vector,
-            ),
+            query=dense_vector,
+            using=DocumentStore.DENSE_VECTOR_NAME,
             limit=k,
             query_filter=filter_conditions,
             with_payload=True,
         )
-        return self._points_to_documents(results)
+        return self._points_to_documents(results.points)
 
     def hybrid_search(
         self,
@@ -108,21 +106,19 @@ class VectorRetriever:
         k = top_k or self._top_k
         dense_vector = self._embedding_model.embed_query(query)
 
-        results = self._document_store.client.search(
+        results = self._document_store.client.query_points(
             collection_name=self._document_store._collection_name,
-            query_vector=NamedVector(
-                name=DocumentStore.DENSE_VECTOR_NAME,
-                vector=dense_vector,
-            ),
+            query=dense_vector,
+            using=DocumentStore.DENSE_VECTOR_NAME,
             limit=k,
             query_filter=filter_conditions,
             with_payload=True,
         )
 
         docs_with_scores = []
-        for point in results:
+        for point in results.points:
             doc = self._point_to_document(point)
-            docs_with_scores.append((doc, point.score))
+            docs_with_scores.append((doc, point.score or 0.0))
 
         return docs_with_scores
 
@@ -141,21 +137,19 @@ class VectorRetriever:
 
         sv = QdrantSparseVector(indices=list(sparse_vector.keys()), values=list(sparse_vector.values()))
 
-        results = self._document_store.client.search(
+        results = self._document_store.client.query_points(
             collection_name=self._document_store._collection_name,
-            query_vector=NamedSparseVector(
-                name=DocumentStore.SPARSE_VECTOR_NAME,
-                vector=sv,
-            ),
+            query=sv,
+            using=DocumentStore.SPARSE_VECTOR_NAME,
             limit=k,
             query_filter=filter_conditions,
             with_payload=True,
         )
 
         docs_with_scores = []
-        for point in results:
+        for point in results.points:
             doc = self._point_to_document(point)
-            docs_with_scores.append((doc, point.score))
+            docs_with_scores.append((doc, point.score or 0.0))
 
         return docs_with_scores
 
