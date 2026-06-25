@@ -10,6 +10,7 @@ from langchain_core.documents import Document
 
 from backend.src.data_loader.base_loader import BaseDocumentLoader
 from backend.src.data_loader.loader_registry import loader_registry
+from backend.src.utils.ocr_utils import ocr_image
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +52,10 @@ class ImageLoader(BaseDocumentLoader):
 
     def _ocr_extract(self) -> Iterator[Document]:
         try:
-            import pytesseract
             from PIL import Image
 
             img = Image.open(str(self._file_path))
-            text = pytesseract.image_to_string(img, lang=self._ocr_lang)
+            text, elapse = ocr_image(img)
 
             if text.strip():
                 yield Document(
@@ -63,13 +63,12 @@ class ImageLoader(BaseDocumentLoader):
                     metadata={
                         "source_file": self._file_path.name,
                         "content_type": "image_ocr",
-                        "extraction_method": "tesseract",
+                        "extraction_method": "rapidocr",
                         "ocr_lang": self._ocr_lang,
+                        "ocr_time": round(elapse, 3),
                         "image_size": f"{img.width}x{img.height}",
                     },
                 )
-        except ImportError:
-            logger.warning("pytesseract not installed, skipping OCR")
         except Exception as e:
             logger.warning(f"OCR extraction failed for {self._file_path.name}: {e}")
 
