@@ -1,0 +1,232 @@
+from __future__ import annotations
+
+import logging
+from typing import Any, Optional
+
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langgraph.graph import END, StateGraph
+from typing import TypedDict
+
+from src.config import settings
+from backend.src.generation.context_builder import ContextBuilder
+from backend.src.generation.prompt_templates import PromptStyle, get_prompt
+from backend.src.generation.response_synthesizer import ResponseSynthesizer
+from backend.src.query_rewriting.hyde_generator import HyDEGenerator
+from backend.src.query_rewriting.query_decomposer import QueryDecomposer
+from backend.src.query_rewriting.query_rewriter import QueryRewriter
+from backend.src.query_rewriting.stepback_prompt import StepBackPrompting
+from backend.src.retrieval.ensemble_retriever import EnsembleRetriever
+from backend.src.memory.conversation_memory import ConversationMemory
+
+logger = logging.getLogger(__name__)
+
+
+class RAGState(TypedDict, total=False):
+    query: str
+    rewritten_queries: list[str]
+    documents: list
+    context: str
+    answer: str
+    history: list
+    metadata: dict
+
+
+class RAGChain:
+    def __init__(
+        self,
+        llm: BaseChatModel,
+        retriever: EnsembleRetriever,
+        *,
+        memory: Optional[ConversationMemory] = None,
+        query_rewriter: Optional[QueryRewriter] = None,
+        query_decomposer: Optional[QueryDecomposer] = None,
+        hyde_generator: Optional[HyDEGenerator] = None,
+        stepback: Optional[StepBackPrompting] = None,
+        prompt_style: PromptStyle = PromptStyle.DETAILED,
+        synthesis_mode: str = "compact",
+        enable_query_rewriting: bool = True,
+        enable_hyde: bool = True,
+        enable_stepback: bool = True,
+        enable_decomposition: bool = True,
+        enable_reranking: bool = True,
+        max_context_length: int = 8000,
+    ):
+        self._llm = llm
+        self._retriever = retriever
+        self._memory = memory or ConversationMemory()
+        self._context_builder = ContextBuilder(max_context_length=max_context_length)
+        self._synthesizer = ResponseSynthesizer(llm, mode=synthesis_mode)
+        self._prompt = get_prompt(prompt_style)
+
+        self._query_rewriter = query_rewriter or QueryRewriter(llm)
+        self._query_decomposer = query_decomposer or QueryDecomposer(llm)
+        self._hyde_generator = hyde_generator or HyDEGenerator(llm)
+        self._stepback = stepback or StepBackPrompting(llm)
+
+        self._enable_query_rewriting = enable_query_rewriting
+        self._enable_hyde = enable_hyde
+        self._enable_stepback = enable_stepback
+        self._enable_decomposition = enable_decomposition
+        self._enable_reranking = enable_reranking
+
+        self._graph = self._build_graph()
+
+    def _build_graph(self) -> StateGraph:
+        graph = StateGraph(RAGState)
+
+        graph.add_node("rewrite_query", self._rewrite_query_node)
+        graph.add_node("retrieve", self._retrieve_node)
+        graph.add_node("build_context", self._build_context_node)
+        graph.add_node("generate", self._generate_node)
+
+        graph.set_entry_point("rewrite_query")
+        graph.add_edge("rewrite_query", "retrieve")
+        graph.add_edge("retrieve", "build_context")
+        graph.add_edge("build_context", "generate")
+        graph.add_edge("generate", END)
+
+        return graph.compile()
+
+    def invoke(
+        self,
+        query: str,
+        *,
+        conversation_id: Optional[str] = None,
+        chain_config: Optional[dict] = None,
+    ) -> dict:
+        cfg = chain_config or {}
+        enable_rw = cfg.get("enable_query_rewriting", self._enable_query_rewriting)
+        enable_hyde = cfg.get("enable_hyde", self._enable_hyde)
+        enable_stepback = cfg.get("enable_stepback", self._enable_stepback)
+        enable_decomp = cfg.get("enable_decomposition", self._enable_decomposition)
+        enable_rerank = cfg.get("enable_reranking", self._enable_reranking)
+        prompt = cfg.get("prompt", self._prompt)
+
+        history = self._memory.get_history(conversation_id or "default")
+        state = RAGState(
+            query=query,
+            history=[m for m in history] if history else [],
+            metadata={
+                "_enable_query_rewriting": enable_rw,
+                "_enable_hyde": enable_hyde,
+                "_enable_stepback": enable_stepback,
+                "_enable_decomposition": enable_decomp,
+                "_enable_reranking": enable_rerank,
+                "_prompt": prompt,
+            },
+        )
+
+        result = self._graph.invoke(state)
+
+        if conversation_id:
+            self._memory.add_message(conversation_id, HumanMessage(content=query))
+            self._memory.add_message(conversation_id, AIMessage(content=result.get("answer", "")))
+
+        return {
+            "query": query,
+            "answer": result.get("answer", ""),
+            "rewritten_queries": result.get("rewritten_queries", []),
+            "num_documents": len(result.get("documents", [])),
+            "context_length": len(result.get("context", "")),
+            "metadata": result.get("metadata", {}),
+        }
+
+    def stream(self, query: str, *, conversation_id: Optional[str] = None):
+        conv_id = conversation_id or "default"
+        history = self._memory.get_history(conv_id)
+        state = RAGState(
+            query=query,
+            history=[m for m in history] if history else [],
+            metadata={},
+        )
+
+        full_answer = ""
+        for output in self._graph.stream(state):
+            if "generate" in output:
+                full_answer = output["generate"].get("answer", "")
+            yield output
+
+        if full_answer:
+            self._memory.add_message(conv_id, HumanMessage(content=query))
+            self._memory.add_message(conv_id, AIMessage(content=full_answer))
+
+    def _rewrite_query_node(self, state: RAGState) -> dict:
+        query = state["query"]
+        meta = state.get("metadata", {})
+        enable_rw = meta.get("_enable_query_rewriting", self._enable_query_rewriting)
+        enable_hyde = meta.get("_enable_hyde", self._enable_hyde)
+        enable_stepback = meta.get("_enable_stepback", self._enable_stepback)
+        enable_decomp = meta.get("_enable_decomposition", self._enable_decomposition)
+
+        all_queries: list[str] = [query]
+        result_meta: dict = {"original_query": query}
+
+        if enable_rw:
+            rewrites = self._query_rewriter.rewrite(query)
+            all_queries.extend(rewrites[1:])
+            result_meta["rewrites"] = rewrites[1:]
+
+        if enable_decomp and len(query) > 50:
+            sub_queries = self._query_decomposer.decompose(query)
+            if sub_queries != [query]:
+                all_queries.extend(sub_queries)
+                result_meta["sub_queries"] = sub_queries
+
+        if enable_hyde:
+            hyde_doc = self._hyde_generator.generate(query)
+            all_queries.append(hyde_doc)
+            result_meta["hyde_document"] = hyde_doc
+
+        if enable_stepback:
+            stepback_queries = self._stepback.generate(query)
+            all_queries.extend(stepback_queries)
+            result_meta["stepback_queries"] = stepback_queries
+
+        return {"rewritten_queries": all_queries, "metadata": result_meta}
+
+    def _retrieve_node(self, state: RAGState) -> dict:
+        meta = state.get("metadata", {})
+        enable_rerank = meta.get("_enable_reranking", self._enable_reranking)
+        enable_hyde = meta.get("_enable_hyde", self._enable_hyde)
+        queries = state.get("rewritten_queries", [state["query"]])
+        hyde_doc = meta.get("hyde_document")
+
+        all_documents = []
+        seen_ids: set[str] = set()
+
+        for q in queries:
+            if enable_hyde and hyde_doc and q == hyde_doc:
+                results = self._retriever.dense_only(q, top_k=settings.retrieval_top_k)
+                docs = [doc for doc, _ in results]
+            else:
+                docs = self._retriever.retrieve(q, rerank_enabled=enable_rerank)
+
+            for doc in docs:
+                doc_id = doc.metadata.get("_id", doc.page_content[:100])
+                if doc_id not in seen_ids:
+                    seen_ids.add(doc_id)
+                    all_documents.append(doc)
+
+        return {"documents": all_documents}
+
+    def _build_context_node(self, state: RAGState) -> dict:
+        documents = state.get("documents", [])
+        context = self._context_builder.build(documents, query=state["query"])
+        return {"context": context}
+
+    def _generate_node(self, state: RAGState) -> dict:
+        context = state.get("context", "")
+        query = state["query"]
+        history = state.get("history", [])
+        meta = state.get("metadata", {})
+        prompt = meta.get("_prompt", self._prompt)
+
+        answer = self._synthesizer.synthesize(
+            query=query,
+            context=context,
+            prompt=prompt,
+            history=history if history else None,
+        )
+
+        return {"answer": answer}
