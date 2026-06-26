@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     llm_api_key: str = Field(default="", alias="LLM_API_KEY")
     llm_base_url: str = Field(default="", alias="LLM_BASE_URL")
 
-    embedding_model_name: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL_NAME")
+    embedding_model_name: str = Field(default="./models/bge-m3", alias="EMBEDDING_MODEL_NAME")
     embedding_device: str = Field(default="cpu", alias="EMBEDDING_DEVICE")
     embedding_use_fp16: bool = Field(default=False, alias="EMBEDDING_USE_FP16")
     embedding_batch_size: int = Field(default=32, alias="EMBEDDING_BATCH_SIZE")
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     retrieval_top_k: int = Field(default=20, alias="RETRIEVAL_TOP_K")
     rerank_top_n: int = Field(default=5, alias="RERANK_TOP_N")
-    reranker_model: str = Field(default="BAAI/bge-reranker-v2-m3", alias="RERANKER_MODEL")
+    reranker_model: str = Field(default="./models/bge-reranker-v2-m3", alias="RERANKER_MODEL")
     bm25_weight: float = Field(default=0.3, alias="BM25_WEIGHT")
     dense_weight: float = Field(default=0.7, alias="DENSE_WEIGHT")
 
