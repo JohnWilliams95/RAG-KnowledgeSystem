@@ -97,11 +97,48 @@ async def chat_stream(
     import json
 
     conversation_id = request.conversation_id or str(uuid.uuid4())
+    logger.info(f"[Stream] Question: {request.question[:50]}...")
+
+    def format_sse(event_type: str, data: str) -> str:
+        """格式化 SSE 事件"""
+        payload = json.dumps(
+            {"event_type": event_type, "data": data},
+            ensure_ascii=False,
+        )
+        return f"data: {payload}\n\n"
 
     async def event_generator():
-        for output in chain.stream(request.question, conversation_id=conversation_id):
-            yield f"data: {json.dumps(output, ensure_ascii=False, default=str)}\n\n"
-        yield "data: [DONE]\n\n"
+        try:
+            for output in chain.stream(request.question, conversation_id=conversation_id):
+                # 处理意图分类事件
+                if "classify_intent" in output:
+                    intent = output["classify_intent"].get("intent", "")
+                    logger.info(f"[Stream] Intent: {intent}")
+                    yield format_sse("intent", intent)
+
+                # 处理查询重写事件
+                elif "rewrite_query" in output:
+                    queries = output["rewrite_query"].get("rewritten_queries", [])
+                    yield format_sse("rewritten_queries", json.dumps(queries, ensure_ascii=False))
+
+                # 处理检索事件
+                elif "retrieve" in output:
+                    docs = output["retrieve"].get("documents", [])
+                    yield format_sse("documents", str(len(docs)))
+
+                # 处理生成事件
+                elif "generate" in output:
+                    answer = output["generate"].get("answer", "")
+                    logger.info(f"[Stream] Generated {len(answer)} chars")
+                    # 逐字符流式输出，模拟打字效果
+                    for char in answer:
+                        yield format_sse("token", char)
+
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            logger.error(f"[Stream] Error: {e}", exc_info=True)
+            yield format_sse("error", str(e))
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(
         event_generator(),

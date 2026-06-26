@@ -228,13 +228,15 @@ class DocumentStore:
         if not self.client.collection_exists(self._collection_name):
             return {"exists": False}
         info = self.client.get_collection(self._collection_name)
-        return {
+        result = {
             "exists": True,
             "points_count": info.points_count,
-            "vectors_count": info.vectors_count,
             "status": str(info.status),
-            "optimizer_status": str(info.optimizer_status),
         }
+        # 新版 qdrant-client 可能移除了 vectors_count 属性
+        if hasattr(info, "vectors_count"):
+            result["vectors_count"] = info.vectors_count
+        return result
 
     def _clean_metadata(self, metadata: dict) -> dict:
         clean = {}

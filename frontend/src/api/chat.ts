@@ -1,5 +1,5 @@
-import api from './index'
-import type { ChatRequest, ChatResponse } from './types'
+import api from './client'
+import type { ChatRequest, ChatResponse, ChatStreamEvent } from './types'
 
 export function sendChat(data: ChatRequest) {
   return api.post<ChatResponse>('/api/v1/chat/', data)
@@ -7,11 +7,12 @@ export function sendChat(data: ChatRequest) {
 
 export async function streamChat(
   data: ChatRequest,
-  onChunk: (event: { event_type: string; data: string }) => void,
+  onChunk: (event: ChatStreamEvent) => void,
   onDone: () => void,
   onError: (error: Error) => void,
 ) {
   const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
   try {
     const response = await fetch(`${baseURL}/api/v1/chat/stream`, {
       method: 'POST',

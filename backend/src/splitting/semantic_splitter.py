@@ -33,13 +33,12 @@ class SemanticSplitter(BaseSplitter):
     def _init_embedder(self):
         if self._embedder is not None:
             return
-        from FlagEmbedding import FlagModel
+        from FlagEmbedding import BGEM3FlagModel
 
-        self._embedder = FlagModel(
+        self._embedder = BGEM3FlagModel(
             self._model_name,
-            query_instruction_for_retrieval="",
             use_fp16=(self._device != "cpu"),
-            devices=self._device,
+            device=self._device,
         )
         logger.info(f"Semantic splitter embedder loaded: {self._model_name}")
 
@@ -65,7 +64,17 @@ class SemanticSplitter(BaseSplitter):
         if len(text) <= self._chunk_size:
             return [doc]
 
-        embeddings = self._embedder.encode(sentences)["dense_embeds"]
+        output = self._embedder.encode(sentences)
+        if isinstance(output, dict):
+            # BGEM3FlagModel 使用 'dense_vecs' 键
+            if "dense_vecs" in output:
+                embeddings = output["dense_vecs"]
+            elif "dense_embeds" in output:
+                embeddings = output["dense_embeds"]
+            else:
+                embeddings = output
+        else:
+            embeddings = output
         import numpy as np
 
         embeddings = np.array(embeddings)

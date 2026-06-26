@@ -24,42 +24,22 @@ export function formatTime(isoString: string): string {
   return `${y}-${m}-${d}`
 }
 
-export function generateId(): string {
-  return crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-export function getStatusType(status: string): 'success' | 'warning' | 'danger' | 'info' {
+export function getStatusColor(status: string): string {
   switch (status) {
-    case 'completed':
-      return 'success'
+    case 'completed': return 'success'
     case 'processing':
-    case 'pending':
-      return 'warning'
-    case 'failed':
-      return 'danger'
-    default:
-      return 'info'
+    case 'pending': return 'processing'
+    case 'failed': return 'error'
+    default: return 'default'
   }
 }
 
-export function getFileTypeIcon(fileType: string): string {
-  const map: Record<string, string> = {
-    pdf: 'Document',
-    docx: 'Document',
-    doc: 'Document',
-    xlsx: 'Grid',
-    xls: 'Grid',
-    csv: 'Grid',
-    pptx: 'Picture',
-    ppt: 'Picture',
-    md: 'Notebook',
-    txt: 'Tickets',
-    html: 'Link',
-    py: 'Monitor',
-    js: 'Monitor',
-    ts: 'Monitor',
-    json: 'Files',
-    yaml: 'Files',
+export function getStatusText(status: string): string {
+  switch (status) {
+    case 'completed': return '完成'
+    case 'processing': return '处理中'
+    case 'pending': return '等待中'
+    case 'failed': return '失败'
+    default: return status
   }
-  return map[fileType] || 'Document'
 }

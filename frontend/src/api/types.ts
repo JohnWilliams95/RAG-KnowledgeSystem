@@ -24,7 +24,6 @@ export interface ChatResponse {
 export interface ChatStreamEvent {
   event_type: string
   data: string
-  metadata?: Record<string, unknown>
 }
 
 export interface IngestResponse {
@@ -34,14 +33,6 @@ export interface IngestResponse {
   chunks_created: number
   point_ids?: string[]
   message?: string
-}
-
-export interface IngestDirectoryResponse {
-  status: string
-  total_files: number
-  total_chunks: number
-  errors: number
-  results?: Record<string, unknown>[]
 }
 
 export interface DocumentInfo {
@@ -54,14 +45,6 @@ export interface DocumentInfo {
   created_at: string
 }
 
-export interface KnowledgeBaseInfo {
-  collection_name: string
-  exists: boolean
-  points_count: number | null
-  vectors_count: number | null
-  status: string | null
-}
-
 export interface KnowledgeBaseStats {
   collection: {
     exists: boolean
@@ -70,23 +53,4 @@ export interface KnowledgeBaseStats {
     status: string | null
   }
   total_documents: number
-}
-
-export interface RetrievedDocument {
-  page_content: string
-  metadata: Record<string, unknown>
-  score?: number
-  rerank_score?: number
-}
-
-export interface RetrievalResponse {
-  query: string
-  documents: RetrievedDocument[]
-  total: number
-}
-
-export interface HealthResponse {
-  status: string
-  version: string
-  qdrant_connected: boolean
 }

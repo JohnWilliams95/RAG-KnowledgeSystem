@@ -12,6 +12,12 @@ from src.config import settings
 from src.api.routes import retrieval
 from src.middleware.trace import TraceMiddleware
 
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 logger = logging.getLogger(__name__)
 
 

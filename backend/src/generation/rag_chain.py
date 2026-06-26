@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class RAGState(TypedDict, total=False):
     query: str
+    intent: str  # "retrieve" 或 "chat"
     rewritten_queries: list[str]
     documents: list
     context: str
@@ -75,15 +76,32 @@ class RAGChain:
     def _build_graph(self) -> StateGraph:
         graph = StateGraph(RAGState)
 
+        # 添加节点
+        graph.add_node("classify_intent", self._classify_intent_node)
         graph.add_node("rewrite_query", self._rewrite_query_node)
         graph.add_node("retrieve", self._retrieve_node)
         graph.add_node("build_context", self._build_context_node)
         graph.add_node("generate", self._generate_node)
 
-        graph.set_entry_point("rewrite_query")
+        # 设置入口
+        graph.set_entry_point("classify_intent")
+
+        # 条件边：根据意图路由
+        graph.add_conditional_edges(
+            "classify_intent",
+            self._route_by_intent,
+            {
+                "need_retrieval": "rewrite_query",
+                "direct_answer": "generate",
+            }
+        )
+
+        # 检索路径
         graph.add_edge("rewrite_query", "retrieve")
         graph.add_edge("retrieve", "build_context")
         graph.add_edge("build_context", "generate")
+
+        # 结束
         graph.add_edge("generate", END)
 
         return graph.compile()
@@ -150,6 +168,36 @@ class RAGChain:
         if full_answer:
             self._memory.add_message(conv_id, HumanMessage(content=query))
             self._memory.add_message(conv_id, AIMessage(content=full_answer))
+
+    def _classify_intent_node(self, state: RAGState) -> dict:
+        """意图分类节点：判断是否需要检索知识库"""
+        query = state["query"]
+
+        # 检查集合是否存在且有数据
+        if not self._collection_exists():
+            logger.info("Knowledge base not available, skipping retrieval")
+            return {"intent": "chat"}
+
+        # 使用两层意图分类
+        intent = self._query_rewriter.classify_intent(query)
+        logger.info(f"Intent classified as '{intent}' for query: {query[:50]}...")
+
+        return {"intent": intent}
+
+    def _collection_exists(self) -> bool:
+        """检查 Qdrant 集合是否存在且有数据"""
+        try:
+            from src.api.dependencies import get_document_store
+            ds = get_document_store()
+            info = ds.get_collection_info()
+            return info.get("exists", False) and (info.get("points_count", 0) or 0) > 0
+        except Exception as e:
+            logger.debug(f"Collection check failed: {e}")
+            return False
+
+    def _route_by_intent(self, state: RAGState) -> str:
+        """根据意图决定走哪条路径"""
+        return "need_retrieval" if state.get("intent") == "retrieve" else "direct_answer"
 
     def _rewrite_query_node(self, state: RAGState) -> dict:
         query = state["query"]
@@ -221,6 +269,11 @@ class RAGChain:
         history = state.get("history", [])
         meta = state.get("metadata", {})
         prompt = meta.get("_prompt", self._prompt)
+
+        # 如果没有上下文，使用简洁 prompt
+        if not context:
+            from src.generation.prompt_templates import get_prompt, PromptStyle
+            prompt = get_prompt(PromptStyle.CONCISE)
 
         answer = self._synthesizer.synthesize(
             query=query,

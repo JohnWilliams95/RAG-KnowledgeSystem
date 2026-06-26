@@ -35,20 +35,21 @@ class BGEM3Embedding(Embeddings):
     def _init_model(self):
         if self._model is not None:
             return
-        from FlagEmbedding import FlagModel
+        from FlagEmbedding import BGEM3FlagModel
 
         logger.info(f"Loading BGE-M3 model: {self._model_name} on {self._device}")
-        self._model = FlagModel(
+        self._model = BGEM3FlagModel(
             self._model_name,
-            query_instruction_for_retrieval="",
             use_fp16=self._use_fp16,
-            devices=self._device,
+            device=self._device,
         )
         logger.info("BGE-M3 model loaded successfully")
 
         if self._dimension is None:
             test_output = self._model.encode(["test"], batch_size=1)
-            if isinstance(test_output, dict):
+            if isinstance(test_output, dict) and "dense_vecs" in test_output:
+                self._dimension = len(test_output["dense_vecs"][0])
+            elif isinstance(test_output, dict) and "dense_embeds" in test_output:
                 self._dimension = len(test_output["dense_embeds"][0])
             else:
                 self._dimension = len(test_output[0])
@@ -103,9 +104,13 @@ class BGEM3Embedding(Embeddings):
         return all_embeddings
 
     def _compute_dense(self, texts: list[str]) -> np.ndarray:
-        output = self._model.encode(texts, batch_size=self._batch_size)
+        output = self._model.encode(texts, batch_size=self._batch_size, return_dense=True)
         if isinstance(output, dict):
-            return output["dense_embeds"]
+            # BGEM3FlagModel 使用 'dense_vecs' 键
+            if "dense_vecs" in output:
+                return output["dense_vecs"]
+            elif "dense_embeds" in output:
+                return output["dense_embeds"]
         return output
 
     def embed_documents_with_sparse(
@@ -116,14 +121,22 @@ class BGEM3Embedding(Embeddings):
         output = self._model.encode(
             texts,
             batch_size=self._batch_size,
+            return_dense=True,
             return_sparse=True,
         )
 
         if isinstance(output, dict):
-            dense = output["dense_embeds"]
+            # 处理稠密向量
+            if "dense_vecs" in output:
+                dense = output["dense_vecs"]
+            elif "dense_embeds" in output:
+                dense = output["dense_embeds"]
+            else:
+                dense = []
             dense_list = dense if isinstance(dense, list) else dense.tolist()
-            sparse_vectors: list[dict[int, float]] = []
 
+            # 处理稀疏向量
+            sparse_vectors: list[dict[int, float]] = []
             if "lexical_weights" in output:
                 for sparse_emb in output["lexical_weights"]:
                     sparse_dict = {}
@@ -132,8 +145,7 @@ class BGEM3Embedding(Embeddings):
                             sparse_dict[int(token_id)] = float(weight)
                     sparse_vectors.append(sparse_dict)
             else:
-                for _ in texts:
-                    sparse_vectors.append({})
+                sparse_vectors = [{} for _ in texts]
         else:
             dense_list = output if isinstance(output, list) else output.tolist()
             sparse_vectors = [{} for _ in texts]

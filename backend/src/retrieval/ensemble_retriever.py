@@ -39,7 +39,7 @@ class EnsembleRetriever:
             embedding_model=embedding_model,
             top_k=top_k,
         )
-        self._bm25_retriever = BM25Retriever(top_k=top_k)
+        self._bm25_retriever = BM25Retriever(top_k=top_k, document_store=document_store)
         self._hybrid_retriever = HybridRetriever(
             dense_retriever=self._dense_retriever,
             sparse_retriever=self._bm25_retriever,
