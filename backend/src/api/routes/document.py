@@ -113,7 +113,13 @@ async def delete_document(
 ):
     if request.file_path:
         result = pipeline.remove_file(request.file_path)
+        # 同时删除上传目录中的源文件
+        _delete_upload_file(request.file_path)
     elif request.doc_id:
+        # 获取文档信息，用于后续删除源文件
+        doc_info = pipeline._metadata_store.get_document(request.doc_id)
+        file_path = doc_info.get("file_path") if doc_info else None
+        
         # 先删除 Qdrant 中的向量数据
         try:
             point_ids = pipeline._get_point_ids_for_doc(request.doc_id)
@@ -125,8 +131,25 @@ async def delete_document(
         
         # 再删除 SQLite 元数据
         pipeline._metadata_store.delete_document(request.doc_id)
+        
+        # 删除上传目录中的源文件
+        if file_path:
+            _delete_upload_file(file_path)
+        
         result = {"status": "success", "message": f"Document {request.doc_id} deleted"}
     else:
         return {"status": "error", "message": "Provide file_path or doc_id"}
 
     return result
+
+
+def _delete_upload_file(file_path: str) -> None:
+    """删除上传目录中的源文件"""
+    try:
+        path = Path(file_path)
+        # 只删除 data/uploads/ 目录下的文件
+        if path.exists() and "uploads" in str(path):
+            path.unlink()
+            logger.info(f"Deleted upload file: {path}")
+    except Exception as e:
+        logger.warning(f"Failed to delete upload file {file_path}: {e}")
