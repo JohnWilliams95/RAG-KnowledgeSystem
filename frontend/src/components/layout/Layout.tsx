@@ -64,7 +64,7 @@ export default function Layout() {
           fontWeight: 600,
           borderBottom: '1px solid rgba(255,255,255,0.1)',
         }}>
-          {sidebarCollapsed ? 'RAG' : 'RAG 知识库'}
+          {sidebarCollapsed ? 'RAG' : 'Williams95-RAG知识库'}
         </div>
         <Menu
           theme="dark"
