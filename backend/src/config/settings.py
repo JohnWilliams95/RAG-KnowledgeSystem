@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     retrieval_top_k: int = Field(default=20, alias="RETRIEVAL_TOP_K")
     rerank_top_n: int = Field(default=5, alias="RERANK_TOP_N")
     reranker_model: str = Field(default="./models/bge-reranker-v2-m3", alias="RERANKER_MODEL")
+    reranker_device: str = Field(default="cpu", alias="RERANKER_DEVICE")
     bm25_weight: float = Field(default=0.3, alias="BM25_WEIGHT")
     dense_weight: float = Field(default=0.7, alias="DENSE_WEIGHT")
 

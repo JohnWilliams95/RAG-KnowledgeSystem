@@ -20,14 +20,14 @@ class SemanticSplitter(BaseSplitter):
         chunk_overlap: int = 200,
         similarity_threshold: float = 0.5,
         buffer_size: int = 1,
-        device: str = "cpu",
+        device: Optional[str] = None,
     ):
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._similarity_threshold = similarity_threshold
         self._buffer_size = buffer_size
         self._model_name = model_name
-        self._device = device
+        self._device = device or settings.embedding_device
         self._embedder = None
 
     def _init_embedder(self):

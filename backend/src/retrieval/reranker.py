@@ -15,13 +15,13 @@ class Reranker:
         self,
         *,
         model_name: Optional[str] = None,
-        device: str = "cpu",
-        use_fp16: bool = False,
+        device: Optional[str] = None,
+        use_fp16: Optional[bool] = None,
         top_n: Optional[int] = None,
     ):
         self._model_name = model_name or settings.reranker_model
-        self._device = device
-        self._use_fp16 = use_fp16
+        self._device = device or settings.reranker_device
+        self._use_fp16 = use_fp16 if use_fp16 is not None else (self._device != "cpu")
         self._top_n = top_n or settings.rerank_top_n
         self._model = None
 
