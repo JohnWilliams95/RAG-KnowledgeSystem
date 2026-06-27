@@ -94,13 +94,26 @@ class ContextBuilder:
         if self._add_metadata:
             source = doc.metadata.get("source_file", doc.metadata.get("source", ""))
             page = doc.metadata.get("page", "")
+            chunk_index = doc.metadata.get("chunk_index", "")
             content_type = doc.metadata.get("content_type", "text")
 
-            meta_parts = [f"[文档{index}]"]
+            # 使用实际文件名作为标识
             if source:
-                meta_parts.append(f"来源: {source}")
+                # 移除文件扩展名和UUID前缀，保留核心文件名
+                display_name = source
+                if "_" in display_name:
+                    # 移除 UUID 前缀（如 "e2e64cab_回转窑..." 中的 "e2e64cab_"）
+                    parts_split = display_name.split("_", 1)
+                    if len(parts_split) > 1 and len(parts_split[0]) == 8:
+                        display_name = parts_split[1]
+                meta_parts = [f"[{display_name}]"]
+            else:
+                meta_parts = [f"[文档{index}]"]
+
             if page:
                 meta_parts.append(f"页码: {page}")
+            elif chunk_index != "":
+                meta_parts.append(f"段落: {chunk_index + 1}")
             if content_type and content_type != "text":
                 meta_parts.append(f"类型: {content_type}")
 

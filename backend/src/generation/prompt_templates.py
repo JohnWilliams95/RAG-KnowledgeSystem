@@ -17,9 +17,10 @@ RAG_QA_PROMPT = ChatPromptTemplate.from_messages([
         "规则：\n"
         "1. 必须基于提供的参考资料回答，不要编造信息\n"
         "2. 如果参考资料不足以回答问题，请明确说明\n"
-        "3. 回答时引用来源，格式为 [来源: 文件名, 页码/位置]\n"
-        "4. 使用清晰、专业的语言\n"
-        "5. 对复杂问题进行结构化回答\n\n"
+        "3. 回答时引用来源，格式为 [来源: 文件名]\n"
+        "4. 如果多个参考资料来自同一文档，请合并引用，只列出一次文档名，不要重复\n"
+        "5. 使用清晰、专业的语言\n"
+        "6. 对复杂问题进行结构化回答\n\n"
         "参考资料：\n{context}"
     )),
     MessagesPlaceholder("history", optional=True),
@@ -29,8 +30,8 @@ RAG_QA_PROMPT = ChatPromptTemplate.from_messages([
 
 RAG_QA_CONCISE_PROMPT = ChatPromptTemplate.from_messages([
     ("system", (
-        "基于以下参考资料简洁回答问题。如果资料不足请说明。"
-        "引用来源格式: [来源: 文件名]\n\n"
+        "基于以下参考资料简洁回答问题。如果资料不足请说明。\n"
+        "引用来源格式: [来源: 文件名]。同一文档只引用一次，不要重复。\n\n"
         "参考资料：\n{context}"
     )),
     MessagesPlaceholder("history", optional=True),
@@ -45,7 +46,7 @@ RAG_QA_DETAILED_PROMPT = ChatPromptTemplate.from_messages([
         "规则：\n"
         "1. 必须基于提供的参考资料回答，不要编造信息\n"
         "2. 如果参考资料不足以回答问题，请明确指出缺少哪方面的信息\n"
-        "3. 详细引用来源，格式为 [来源: 文件名, 页码/位置]\n"
+        "3. 引用来源格式为 [来源: 文件名]，同一文档只引用一次，不要重复列出\n"
         "4. 使用分层次的结构化回答（要点、分析、总结）\n"
         "5. 对不同来源的信息进行综合分析\n"
         "6. 提供推理过程，让回答有据可循\n\n"
