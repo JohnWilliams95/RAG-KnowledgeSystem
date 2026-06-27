@@ -5,6 +5,11 @@ from __future__ import annotations
 
 import argparse
 import logging
+import sys
+from pathlib import Path
+
+# 确保可以导入项目模块
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config import settings
 from src.ingestion.document_store import DocumentStore
