@@ -29,3 +29,5 @@ docs/
 architecture.md
 models/
 tempFile/
+test_dataset.json
+results.json

@@ -40,7 +40,15 @@ class RetrievalMetrics:
         if not relevant_ids:
             return 0.0
 
-        ids = retrieved_ids[:k] if k else retrieved_ids
+        # 去重：同一文档只计一次，保持原始排名顺序
+        seen = set()
+        deduped = []
+        for doc_id in retrieved_ids:
+            if doc_id not in seen:
+                seen.add(doc_id)
+                deduped.append(doc_id)
+
+        ids = deduped[:k] if k else deduped
         relevant_set = set(relevant_ids)
 
         dcg = 0.0

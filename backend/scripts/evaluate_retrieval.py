@@ -28,7 +28,7 @@ def run_evaluation(test_cases: list[dict], top_k: int = 20) -> dict:
 
     all_retrieved_ids = []
     all_relevant_ids = []
-    questions = []
+    queries = []
     retrieval_times = []
 
     print("=" * 60)
@@ -37,35 +37,35 @@ def run_evaluation(test_cases: list[dict], top_k: int = 20) -> dict:
 
     for i, case in enumerate(test_cases, 1):
         question = case['question']
-        relevant_ids = case['relevant_doc_ids']
+        relevant_files = case['relevant_source_files']
         category = case.get('category', '未分类')
 
         print(f"\n[{i}/{len(test_cases)}] 问题: {question}")
         print(f"  分类: {category}")
-        print(f"  相关文档: {relevant_ids}")
+        print(f"  相关文档: {relevant_files}")
 
         # 执行检索并计时
         start_time = time.time()
         docs = retriever.retrieve(question, top_k=top_k, rerank_enabled=False)
         elapsed = time.time() - start_time
 
-        retrieved_ids = [doc.metadata.get('_id', '') for doc in docs]
+        retrieved_files = [doc.metadata.get('source_file', '') for doc in docs]
 
         print(f"  检索耗时: {elapsed:.2f}s")
-        print(f"  检索结果前5: {retrieved_ids[:5]}")
+        print(f"  检索结果前5: {retrieved_files[:5]}")
 
         # 检查是否命中
-        hit = any(rid in relevant_ids for rid in retrieved_ids)
-        print(f"  命中: {'✓' if hit else '✗'}")
+        hit = any(f in relevant_files for f in retrieved_files)
+        print(f"  命中: {'YES' if hit else 'NO'}")
 
-        all_retrieved_ids.append(retrieved_ids)
-        all_relevant_ids.append(relevant_ids)
-        questions.append(question)
+        all_retrieved_ids.append(retrieved_files)
+        all_relevant_ids.append(relevant_files)
+        queries.append(question)
         retrieval_times.append(elapsed)
 
     # 计算指标
     results = metrics.evaluate(
-        questions=questions,
+        queries=queries,
         all_retrieved_ids=all_retrieved_ids,
         all_relevant_ids=all_relevant_ids,
         k_values=[1, 3, 5, 10],
@@ -111,7 +111,7 @@ def main():
     parser = argparse.ArgumentParser(description="RAG检索效果评估")
     parser.add_argument(
         "--dataset",
-        default="data/test_dataset.json",
+        default=str(Path(__file__).parent / "test_dataset.json"),
         help="测试数据集路径"
     )
     parser.add_argument(
@@ -139,7 +139,9 @@ def main():
 
     # 保存结果
     if args.output:
-        with open(args.output, 'w', encoding='utf-8') as f:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(results, f, ensure_ascii=False, indent=2)
         print(f"\n结果已保存到: {args.output}")
 
