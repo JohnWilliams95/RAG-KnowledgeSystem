@@ -2,6 +2,12 @@
 
 基于 LangChain + LangGraph + Qdrant + BGE-M3 构建的 RAG 知识库问答系统，支持多格式文档解析、语义分块、混合检索与智能问答。
 
+## 效果展示
+<img width="1920" height="1032" alt="RAGKnowledg1" src="https://github.com/user-attachments/assets/5f924797-3c82-4249-a8ca-6b6602ceb440" />
+<img width="1920" height="953" alt="RAGKnowledg2" src="https://github.com/user-attachments/assets/e99bafe6-0c26-4135-bf06-6211497af74e" />
+
+<img width="1920" height="953" alt="RAGKnowledg3" src="https://github.com/user-attachments/assets/2ff476e9-d532-4b58-88f2-3e168b459f00" />
+
 ## 技术栈
 
 | 层级 | 技术选型 | 选型理由 |
