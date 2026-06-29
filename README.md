@@ -1,6 +1,6 @@
 # RAG-KnowledgeSystem
 
-基于 LangChain + LangGraph + Qdrant + BGE-M3 构建的 RAG 知识库问答系统，支持多格式文档解析、语义分块、混合检索与智能问答。
+基于 LangChain + LangGraph + Qdrant + BGE-M3 构建的金属冶炼领域 RAG 知识库问答系统，支持多格式文档解析、语义分块、混合检索与智能问答。
 
 ## 效果展示
 <img width="1920" height="1032" alt="RAGKnowledg1" src="https://github.com/user-attachments/assets/5f924797-3c82-4249-a8ca-6b6602ceb440" />
@@ -12,14 +12,14 @@
 
 | 层级 | 技术选型 | 选型理由 |
 |------|---------|---------|
-| 框架 | LangChain + LangGraph | 市场主流 RAG 编排框架，支持有状态工作流 |
-| LLM | OpenAI 兼容接口（mimo-v2.5-pro） | 小米 Token Plan API，支持流式输出 |
-| Embedding | BAAI/bge-m3（本地部署） | 免费、1024维、多语言SOTA、支持稀疏+稠密双向量 |
+| 框架 | LangChain + LangGraph |  RAG 编排框架，支持有状态工作流 |
+| Embedding | BAAI/bge-m3（本地部署） | 1024维、多语言SOTA、支持稀疏+稠密双向量 |
 | 向量库 | Qdrant（本地部署） | Rust高性能，原生混合检索，数据持久化 |
 | 重排序 | BGE-Reranker-v2-m3（本地部署） | Cross-Encoder 精排，提升检索准确率 |
 | 多路召回 | Dense + BM25 + RRF 融合 | BGE-M3双向量 + rank_bm25 + Qdrant原生融合 |
 | Query重写 | Multi-Query + HyDE + Step-Back + QueryDecomposition | 多策略查询增强，提升检索覆盖率 |
 | 后端 | FastAPI | 高性能、类型安全、自动生成API文档 |
+| 前端 | React | 高性能、流式输出 |
 | 评测 | RAGAS + 自建评估指标 | RAG专用评测框架 + 多维度检索指标 |
 | 包管理 | uv | Rust编写，极速依赖解析 |
 
@@ -211,7 +211,7 @@ RAG-KnowledgeSystem/
 | Hit Rate | 1.0000 | 所有查询都命中相关文档 |
 | MRR | 1.0000 | 相关文档总是排在第1位 |
 | Recall@1 | 0.9000 | 90%的问题在第1位找到全部相关文档 |
-| Recall@5 | 1.0000 | 前5个结果覆盖全部相关文档 |
+| Recall@5 | 0.9000 | 前5个结果覆盖全部相关文档 |
 | NDCG@5 | 1.0000 | 排序质量完美 |
 | 平均检索耗时 | 3.23s | 包含首次模型加载 |
 
@@ -278,9 +278,9 @@ docker run -d --name qdrant -p 6333:6333 -p 6334:6334 \
 编辑 `.env` 文件：
 
 ```env
-# LLM配置（小米Token Plan API）
+# LLM配置
 LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://api.xiaomi.com/v1
+LLM_BASE_URL=your_base_url
 LLM_MODEL=mimo-v2.5-pro
 
 # Embedding配置（本地模型）
@@ -393,7 +393,7 @@ curl http://localhost:8000/api/v1/knowledge-base/documents
 |------|--------|------|
 | `LLM_API_KEY` | - | API密钥 |
 | `LLM_BASE_URL` | - | API地址 |
-| `LLM_MODEL` | `mimo-v2.5-pro` | 模型名称 |
+| `LLM_MODEL` | `your_model` | 模型名称 |
 | `EMBEDDING_MODEL_NAME` | `./models/bge-m3` | Embedding模型路径 |
 | `EMBEDDING_DEVICE` | `cpu` | 运行设备 (cpu/cuda) |
 | `EMBEDDING_USE_FP16` | `false` | 半精度加速 |
